@@ -11,6 +11,20 @@ UBUNTU_ROOT=/data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootf
 
 MARKER_FILE="$HOME/.jack_eason"
 
+#!/bin/bash
+
+# 检测Termux环境
+check_termux() {
+    if [ -d "/data/data/com.termux/files/usr" ] && [ -n "$TERMUX_VERSION" ]; then
+        return 0  # 是Termux环境
+    else
+        return 1  # 不是Termux环境
+    fi
+}
+
+# 主逻辑
+if check_termux; then
+    echo "检测到运行环境: Termux"
 
 if [ ! -f "$MARKER_FILE" ]; then
     echo "首次运行脚本！"
@@ -24,3 +38,7 @@ else
 fi
 
 bash $YUANWEI_ZHI/容器.sh
+else
+    echo "检测到运行环境: 标准Linux系统"
+   bash $YUANWEI_ZHI/3.3.sh
+fi

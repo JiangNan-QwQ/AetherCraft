@@ -26,35 +26,11 @@ ROOT_DIR="/root"
 JAVA_REQUIRED=21
 BACKUP_DIR="${ROOT_DIR}/backups"
 
-     TITLE="由JE制作"
-        MENU_PROMPT="请选择要执行的操作"
-        INSTALL_PROMPT="选择核心类型"
-        VERSION_PROMPT="选择版本"
-        START_PROMPT="选择要启动的核心"
-        UNINSTALL_PROMPT="选择要卸载的核心"
-        CONFIG_PROMPT="配置服务器"
-        BACKUP_PROMPT="备份服务器"
-        RESTORE_PROMPT="恢复服务器"
-        STATUS_PROMPT="检查状态"
-        CLEAN_LOGS_PROMPT="清理旧日志"
-        MONITOR_PROMPT="性能监控"
-        EXIT_PROMPT="退出"
-        
-        HITOKOTO_TITLE="日萃一言"
-        HITOKOTO_ERROR="获取一言失败，请检查网络或安装 curl 和 jq"
-        HITOKOTO_INSTALLING="回车安装 curl 和 jq..."
-        HITOKOTO_NET_ERROR="网络连接失败，请检查网络设置"
-        DIALOG_ERROR="未找到 dialog 命令，正在尝试安装..."
-        DIALOG_FAIL="安装 dialog 失败，请手动安装："
-        LOCALE_WARNING="警告：当前语言环境不支持 UTF-8，中文可能显示乱码！请设置语言环境为 zh_CN.UTF-8。"
-        NO_INSTANCE="未找到实例，请先安装！"
-        CLEAN_LOGS_SUCCESS="旧日志清理完成！"
-        UPDATE_AVAILABLE="有新版本可用："
-        MONITOR_RUNNING="服务器运行中，资源使用情况："
-        MONITOR_NOT_RUNNING="服务器未运行。"
-        STOP_SUCCESS="服务器已停止！"
         
 
+
+        
+ 
 check_language() {
 # 目标语言环境
 TARGET_LOCALE="zh_CN.UTF-8"
@@ -226,6 +202,30 @@ EOF
 # 检查依赖是否安装
 
 check_dependencies() {
+    # 检测包管理器
+    local pkg_manager=""
+    if command -v apt &> /dev/null; then
+        pkg_manager="apt (Debian/Ubuntu)"
+        INSTALL_CMD="apt install -y"
+    elif command -v yum &> /dev/null; then
+        pkg_manager="yum (CentOS/RHEL)"
+        INSTALL_CMD="yum install -y"
+    elif command -v dnf &> /dev/null; then
+        pkg_manager="dnf (Fedora)"
+        INSTALL_CMD="dnf install -y"
+    elif command -v pacman &> /dev/null; then
+        pkg_manager="pacman (Arch Linux)"
+        INSTALL_CMD="pacman -S --noconfirm"
+    elif command -v apk &> /dev/null; then
+        pkg_manager="apk (Alpine Linux)"
+        INSTALL_CMD="apk add"
+    else
+        echo -e "${RED}无法检测到支持的包管理器！${NC}"
+        return 1
+    fi
+
+    echo -e "${GREEN}检测到包管理器: ${pkg_manager}${NC}"
+    
     local missing=()
     for dep in "${REQUIRED_DEPS[@]}"; do
         if ! command -v "$dep" >/dev/null 2>&1; then
@@ -234,14 +234,13 @@ check_dependencies() {
     done
 
     if [ ${#missing[@]} -gt 0 ]; then
-        echo -e "\033[1;33m正在安装缺失依赖：${missing[*]} ...\033[0m"
+        echo -e "\033[1;33m正在使用${pkg_manager}安装缺失依赖：${missing[*]} ...\033[0m"
         if ! $INSTALL_CMD "${missing[@]}"; then
             echo -e "\033[1;31m依赖安装失败，请手动执行：$INSTALL_CMD ${missing[*]}\033[0m"
             exit 1
         fi
     fi
 }
-
 
 check_wget() {
 # 检查wget是否已安装
@@ -296,20 +295,6 @@ check_deps() {
 }
 
 
-check_ubuntu() {
-if [ -f /etc/os-release ]; then
-    source /etc/os-release
-    if [ "$ID" = "ubuntu" ]; then
-        echo "系统检测通过，正在运行于Ubuntu环境。"
-    else
-        echo "错误：此脚本仅支持Ubuntu系统，当前系统为 $ID。" >&2
-        exit 1
-    fi
-else
-    echo "错误：无法识别操作系统，脚本终止。" >&2
-    exit 1
-fi
-}
 
 # 统一提示信息
 show_info() {
@@ -540,14 +525,14 @@ check_dialog() {
 # 检查并安装 curl 和 jq
 check_curl_jq() {
     if ! command -v curl &> /dev/null || ! command -v jq &> /dev/null; then
-        dialog --msgbox "$HITOKOTO_INSTALLING" 10 50
+        dialog --msgbox "回车安装 curl 和 jq..." 10 50
         if command -v apt &> /dev/null; then
             apt update && apt install -y curl jq || {
-                dialog --msgbox "$HITOKOTO_ERROR" 10 50
+                dialog --msgbox "获取一言失败，请检查网络或安装 curl 和 jq" 10 50
                 return 1
             }
         else
-            dialog --msgbox "$HITOKOTO_ERROR" 10 50
+            dialog --msgbox "获取一言失败，请检查网络或安装 curl 和 jq" 10 50
             return 1
         fi
     fi
@@ -557,30 +542,12 @@ check_curl_jq() {
 # 检查网络连接
 check_network() {
     if ! ping -c 1 -W 2 www.badu.com &> /dev/null; then
-        dialog --msgbox "$HITOKOTO_NET_ERROR" 10 50
+        dialog --msgbox "网络连接失败，请检查网络设置" 10 50
         return 1
     fi
     return 0
 }
 
-# 显示一言
-show_hitokoto() {
-    if ! check_curl_jq || ! check_network; then
-        return 1
-    fi
-
-    local api_url="https://v1.hitokoto.cn"
-    [ "$LANG" = "en" ] && api_url="${api_url}?c=i" # 英文句子
-
-    local hitokoto
-    hitokoto=$(curl -s --connect-timeout 5 --retry 2 "$api_url" | jq -r '.hitokoto' 2>/dev/null)
-    
-    if [ -z "$hitokoto" ] || [ "$hitokoto" = "null" ]; then
-        dialog --msgbox "$HITOKOTO_ERROR" 10 50
-    else
-        dialog --title "$HITOKOTO_TITLE" --msgbox "$hitokoto" 10 50
-    fi
-}
 
 # Java版本检查并自动安装 Java 21
 check_java() {
@@ -777,42 +744,58 @@ create_menu() {
     shift 2
     dialog --clear \
         --backtitle "$BACKTITLE" \
-        --title "$title" \
+        --title "由JE制作" \
         --menu "$prompt" \
         "$MENU_HEIGHT" "$MENU_WIDTH" "$MENU_CHOICE_HEIGHT" \
         "$@" \
     2>&1 >/dev/tty
 }
-tool_box() {
-while true; do
-         local dynamic_title="${TITLE}" 
-        choice=$(create_menu "$dynamic_title" "$MENU_PROMPT" \
-        "1" "时钟" \
-        "2" "退出")
-         case "$choice" in
-         "1") time_clock ;;
-         "2") break ;;
-         "") echo -e "${RED}取消操作${NC}"; sleep 1 ;;
-        *) echo -e "${RED}无效选项，请重试！${NC}"; sleep 1 ;;
-        esac
-        done
-}
+
 # 主菜单
 main_menu() {
-    
+    # 获取系统信息
+    local os_info="未知系统"
+    if [ -f /etc/os-release ]; then
+        os_info=$(grep PRETTY_NAME /etc/os-release | cut -d= -f2 | tr -d '"')
+    elif [ -f /etc/redhat-release ]; then
+        os_info=$(cat /etc/redhat-release)
+    elif [ -f /etc/arch-release ]; then
+        os_info="Arch Linux"
+    fi
+
+    # 获取内核信息
+    local kernel_info=$(uname -r)
+
+    # 检测包管理器
+    local pkg_manager="未知"
+    if command -v apt &> /dev/null; then
+        pkg_manager="apt (Debian/Ubuntu)"
+    elif command -v yum &> /dev/null; then
+        pkg_manager="yum (CentOS/RHEL)"
+    elif command -v dnf &> /dev/null; then
+        pkg_manager="dnf (Fedora)"
+    elif command -v pacman &> /dev/null; then
+        pkg_manager="pacman (Arch Linux)"
+    elif command -v apk &> /dev/null; then
+        pkg_manager="apk (Alpine Linux)"
+    elif command -v zypper &> /dev/null; then
+        pkg_manager="zypper (openSUSE)"
+    fi
+
+    # 构建动态标题
+    local dynamic_title="${TITLE} | ${os_info} | 内核:${kernel_info} | 包管理器:${pkg_manager}"
+
     while true; do
-local dynamic_title="${TITLE}"
-        choice=$(create_menu "$dynamic_title" "$MENU_PROMPT" \
-            "1" "$INSTALL_PROMPT" \
-            "2" "$START_PROMPT" \
-            "3" "$UNINSTALL_PROMPT" \
-            "4" "$CONFIG_PROMPT" \
-            "5" "$BACKUP_PROMPT" \
-            "6" "$RESTORE_PROMPT" \
-            "7" "$CLEAN_LOGS_PROMPT" \
-            "8" "工具箱" \
-            "9" "安装互通插件" \
-            "10" "$EXIT_PROMPT")
+        choice=$(create_menu "$dynamic_title" "请选择要执行的操作" \
+            "1" "选择核心类型" \
+            "2" "选择要启动的核心" \
+            "3" "选择要卸载的核心" \
+            "4" "配置服务器" \
+            "5" "备份服务器" \
+            "6" "恢复服务器" \
+            "7" "清理旧日志" \
+            "8" "安装互通插件" \
+            "9" "退出")
 
         case "$choice" in
         "1") install_core ;;
@@ -822,11 +805,12 @@ local dynamic_title="${TITLE}"
         "5") backup_menu ;;
         "6") restore_menu ;;
         "7") clean_logs_menu ;;
-        "8") tool_box ;;
-        "9") install_plugins ;;
-        "10") echo "感谢使用，再见😊"
-        sleep 2
-         exit 0 ;;
+        "8") install_plugins ;;
+        "9") 
+            echo "感谢使用，再见😊😊"
+            sleep 2
+            exit 0 
+            ;;
         "") echo -e "${RED}取消操作${NC}"; sleep 1 ;;
         *) echo -e "${RED}无效选项，请重试！${NC}"; sleep 1 ;;
         esac
@@ -994,9 +978,8 @@ config_menu() {
             "1" "编辑服务器配置" \
             "2" "调整JVM参数" \
             "3" "管理插件/模组" \
-            "4" "开关服务器" \
-            "5" "查看日志" \
-            "6" "返回主菜单" 3>&1 1>&2 2>&3)
+            "4" "查看日志" \
+            "5" "返回主菜单" 3>&1 1>&2 2>&3)
 
         case $choice in
             1)
@@ -1071,28 +1054,6 @@ fi
                 ;;
 
             4)
-                # 服务控制
-                local service_action
-                if [ "$service_status" = "运行中" ]; then
-                    service_action=$(dialog --menu "选择操作" 10 40 3 \
-                        "1" "重启服务" \
-                        "2" "停止服务" 3>&1 1>&2 2>&3)
-                    
-                    case $service_action in
-                        1) 
-                            pkill -f "java -jar ${instance_path}/server.jar"
-                            (cd "$instance_path" && bash start.sh) &
-                            ;;
-                        2) 
-                            pkill -f "java -jar ${instance_path}/server.jar" 
-                            ;;
-                    esac
-                else
-                    (cd "$instance_path" && bash start.sh) &
-                fi
-                ;;
-
-            5)
                 # 日志查看（支持实时跟踪）
                 dialog --tailbox "${instance_path}/logs/latest.log" 25 80
                 ;;
@@ -1472,7 +1433,6 @@ interactive_cleanup() {
 
 # 主程序
 clear
-check_ubuntu
 check_root
 check_language
 check_deps
@@ -1480,5 +1440,4 @@ check_dependencies
 check_wget
 check_dialog
 check_java
-show_hitokoto
 main_menu
