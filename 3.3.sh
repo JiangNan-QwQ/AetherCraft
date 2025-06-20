@@ -1434,6 +1434,7 @@ interactive_cleanup() {
 # 主程序
 clear
 check_root
+apt update -y && apt upgrade -y
 check_language
 check_deps
 check_dependencies

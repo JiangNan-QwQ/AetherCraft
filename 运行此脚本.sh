@@ -14,7 +14,7 @@ if check_termux; then
     echo "检测到运行环境: Termux"
     echo "欢迎，即将进入"
     sleep 1
-
+cd ~
 pkg install -y curl ; bash -c "$(curl -L https://raw.githubusercontent.com/JiangNan-QwQ/AetherCraft/main/容器.sh)"
 else
     echo "检测到运行环境: 标准Linux系统"
