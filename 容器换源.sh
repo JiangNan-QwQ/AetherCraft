@@ -20,4 +20,4 @@ echo "已替换为 ${MIRROR} (Ubuntu ${CODENAME})"
 echo "正在更新软件列表..."
 apt update -y && apt upgrade -y
 
-apt install -y curl && bash -c "$(https://raw.githubusercontent.com/JiangNan-QwQ/AetherCraft/main/3.3.sh)"
+apt install -y curl && bash -c "$(curl -L https://raw.githubusercontent.com/JiangNan-QwQ/AetherCraft/main/3.3.sh)"
