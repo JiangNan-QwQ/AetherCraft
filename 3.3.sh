@@ -14,10 +14,8 @@ YELLOW='\033[0;33m'
 NC='\033[0m' # 无颜色
 
 # 全局变量定义
-REQUIRED_DEPS=("curl" "jq" "lolcat")
-INSTALL_CMD="apt install -y"
-REQUIRED_DEPS=("figlet" "lolcat")
-INSTALL_CMD="apt install -y"
+REQUIRED_DEPS=("curl" "jq" "lolcat" "figlet")
+INSTALL_CMD="apt-get install -y"
 BACKTITLE="B站JE"
 MENU_HEIGHT=15
 MENU_WIDTH=40
@@ -49,9 +47,9 @@ check_locale() {
 # 安装语言包（根据系统类型）
 install_locale() {
     echo "尝试安装语言包..."
-    if command -v apt &> /dev/null; then
+    if command -v apt-get &> /dev/null; then
         # Debian/Ubuntu
-        apt update && apt install -y language-pack-zh-hans
+        apt-get update && apt-get install -y language-pack-zh-hans
     elif command -v yum &> /dev/null; then
         # CentOS/RHEL
         yum install -y glibc-common zh-CN
@@ -201,75 +199,52 @@ EOF
 
 # 检查依赖是否安装
 
-check_dependencies() {
-    # 检测包管理器
-    local pkg_manager=""
-    if command -v apt &> /dev/null; then
-        pkg_manager="apt (Debian/Ubuntu)"
-        INSTALL_CMD="apt install -y"
-    elif command -v yum &> /dev/null; then
-        pkg_manager="yum (CentOS/RHEL)"
-        INSTALL_CMD="yum install -y"
-    elif command -v dnf &> /dev/null; then
-        pkg_manager="dnf (Fedora)"
-        INSTALL_CMD="dnf install -y"
-    elif command -v pacman &> /dev/null; then
-        pkg_manager="pacman (Arch Linux)"
-        INSTALL_CMD="pacman -S --noconfirm"
-    elif command -v apk &> /dev/null; then
-        pkg_manager="apk (Alpine Linux)"
-        INSTALL_CMD="apk add"
-    else
-        echo -e "${RED}无法检测到支持的包管理器！${NC}"
-        return 1
-    fi
 
-    echo -e "${GREEN}检测到包管理器: ${pkg_manager}${NC}"
+check_curl() {
+# 检查curl是否已安装
+if ! command -v curl &> /dev/null; then
+    echo "curl未安装，正在尝试自动安装..."
     
-    local missing=()
-    for dep in "${REQUIRED_DEPS[@]}"; do
-        if ! command -v "$dep" >/dev/null 2>&1; then
-            missing+=("$dep")
-        fi
-    done
+        apt-get update && apt-get install -y curl
 
-    if [ ${#missing[@]} -gt 0 ]; then
-        echo -e "\033[1;33m正在使用${pkg_manager}安装缺失依赖：${missing[*]} ...\033[0m"
-        if ! $INSTALL_CMD "${missing[@]}"; then
-            echo -e "\033[1;31m依赖安装失败，请手动执行：$INSTALL_CMD ${missing[*]}\033[0m"
-            exit 1
-        fi
+    
+    # 再次验证安装是否成功
+    if command -v curl &> /dev/null; then
+        echo "curl安装成功！"
+    else
+        echo "curl安装失败，请手动安装"
+        exit 1
     fi
+else
+    echo "curl已安装"
+fi
 }
+check_jq() {
+# 检查jq是否已安装
+if ! command -v jq &> /dev/null; then
+    echo "jq未安装，正在尝试自动安装..."
+    
+        apt-get update && apt-get install -y jq
 
+    
+    # 再次验证安装是否成功
+    if command -v jq &> /dev/null; then
+        echo "jq安装成功！"
+    else
+        echo "jq安装失败，请手动安装"
+        exit 1
+    fi
+else
+    echo "jq已安装"
+fi
+}
 check_wget() {
 # 检查wget是否已安装
 if ! command -v wget &> /dev/null; then
     echo "wget未安装，正在尝试自动安装..."
     
-    # 检测包管理器并安装
-    if command -v apt-get &> /dev/null; then
-        # Debian/Ubuntu
         apt-get update && apt-get install -y wget
-    elif command -v yum &> /dev/null; then
-        # CentOS/RHEL
-        yum install -y wget
-    elif command -v dnf &> /dev/null; then
-        # Fedora
-        dnf install -y wget
-    elif command -v zypper &> /dev/null; then
-        # openSUSE
-        zypper install -y wget
-    elif command -v pacman &> /dev/null; then
-        # Arch Linux
-        pacman -Sy --noconfirm wget
-    elif command -v apk &> /dev/null; then
-        # Alpine Linux
-        apk add wget
-    else
-        echo "错误：无法识别的包管理器，请手动安装wget"
-        exit 1
-    fi
+
     
     # 再次验证安装是否成功
     if command -v wget &> /dev/null; then
@@ -304,7 +279,6 @@ install_plugins() {
         instances+=("$(basename "$dir")" "${dir#${ROOT_DIR}/versions/}")
     done < <(find "${ROOT_DIR}/versions" -maxdepth 1 -type d -name "*" -print0)
 
-    # 检查是否有安装实例
     if [ ${#instances[@]} -eq 0 ]; then
         dialog --msgbox "未找到任何服务器实例，请先安装！" 10 50
         return 1
@@ -315,29 +289,13 @@ install_plugins() {
         "${instances[@]}" 2>&1 >/dev/tty)
     [ -z "$selected_instance" ] && return
 
-    # 从目录名解析元数据
+    # 解析实例元数据
     local dir_name="$selected_instance"
     local core_type=$(echo "$dir_name" | awk -F- '{print $1}')
     local mc_version=$(echo "$dir_name" | awk -F- '{print $2}')
-    local instance_name=$(echo "$dir_name" | awk -F- '{for(i=3;i<=NF;i++) printf "%s%s", $i, (i<NF?"-":"")}')
-
-    # 验证核心类型
-    case "$core_type" in
-        "Fabric"|"Spigot") ;;
-        *)
-            dialog --msgbox "无效的目录结构：无法识别核心类型" 10 50
-            return 1
-            ;;
-    esac
-
-    # 验证版本格式
-    if ! [[ "$mc_version" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
-        dialog --msgbox "无效的版本格式：$mc_version" 10 50
-        return 1
-    fi
+    local instance_path="${ROOT_DIR}/versions/${selected_instance}"
 
     # 确定插件目录
-    local instance_path="${ROOT_DIR}/versions/${selected_instance}"
     local install_dir="${instance_path}/plugins"
     [ "$core_type" = "Fabric" ] && install_dir="${instance_path}/mods"
     mkdir -p "$install_dir" || {
@@ -345,155 +303,158 @@ install_plugins() {
         return 1
     }
 
-    # 动态生成插件数据库（支持扩展）
-    declare -A plugin_map=(
-        ["Geyser"]="GeyserMC/Geyser"
-        ["Floodgate"]="GeyserMC/Floodgate"
-        ["ViaVersion"]="ViaVersion/ViaVersion"
-        ["ViaBackwards"]="ViaVersion/ViaBackwards"
-        ["ViaRewind"]="ViaVersion/ViaRewind"
-        ["Spark"]="lucko/spark"
-        ["LuckPerms"]="LuckPerms/LuckPerms"
+    # 插件数据库（支持多源回退）
+    declare -A plugin_sources=(
+        # 基岩版互通
+        ["Geyser"]="mirror|https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot
+                    github|https://github.com/GeyserMC/Geyser/releases/latest/download/Geyser-Spigot.jar
+                    jenkins|https://ci.opencollab.dev/job/GeyserMC/job/Geyser/job/master/lastSuccessfulBuild/artifact/bootstrap/spigot/target/Geyser-Spigot.jar"
+        
+        ["Floodgate"]="mirror|https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot
+                       github|https://github.com/GeyserMC/Floodgate/releases/latest/download/floodgate-spigot.jar
+                       jenkins|https://ci.opencollab.dev/job/GeyserMC/job/Floodgate/job/master/lastSuccessfulBuild/artifact/spigot/target/floodgate-spigot.jar"
+        
+        # 跨版本支持
+        ["ViaVersion"]="spigotmc|https://www.spigotmc.org/resources/viaversion.19254/download?version=476915
+                        github|https://github.com/ViaVersion/ViaVersion/releases/latest/download/ViaVersion-4.8.1.jar"
+        
+        ["ViaBackwards"]="spigotmc|https://www.spigotmc.org/resources/viabackwards.27448/download?version=476916
+                          github|https://github.com/ViaVersion/ViaBackwards/releases/latest/download/ViaBackwards-4.8.1.jar"
     )
 
-    # 生成插件选择列表（带版本兼容性提示）
+    # 生成插件选择列表
     local plugin_choices=()
-    for plugin in "${!plugin_map[@]}"; do
-        if check_plugin_compatibility "$plugin" "$mc_version" "$core_type"; then
-            plugin_choices+=("$plugin" "√ 兼容" on)
-        else
-            plugin_choices+=("$plugin" "× 不兼容" off)
-        fi
+    for plugin in "${!plugin_sources[@]}"; do
+        case "$plugin" in
+            "Geyser"|"Floodgate") desc="基岩版互通组件" ;;
+            "Via"*)               desc="跨版本支持" ;;
+            *)                    desc="功能插件" ;;
+        esac
+        plugin_choices+=("$plugin" "$desc" on)
     done
 
     # 插件选择对话框
-    local selected_plugins=$(dialog --checklist "选择插件 (当前版本：${mc_version})" 18 60 15 \
+    local selected_plugins=$(dialog --checklist "选择插件 (当前版本：${mc_version})" 20 70 15 \
         "${plugin_choices[@]}" 3>&1 1>&2 2>&3)
     [ $? -ne 0 ] && return
 
-    # 安装进度对话框
-    (
-        echo "0"
-        echo "# 初始化插件安装环境..."
-        local total_steps=$(($(wc -w <<< "$selected_plugins") * 6))
-        local current_step=0
-        declare -a installed_plugins
+    # 前台安装过程
+    clear
+    echo -e "${GREEN}=== 开始安装插件 ===${NC}"
+    echo -e "目标实例: ${YELLOW}${selected_instance}${NC}"
+    echo -e "核心类型: ${YELLOW}${core_type}${NC}"
+    echo -e "游戏版本: ${YELLOW}${mc_version}${NC}"
+    echo -e "安装目录: ${YELLOW}${install_dir}${NC}"
+    echo -e "选择插件: ${YELLOW}${selected_plugins}${NC}"
+    echo "----------------------------------------"
 
-        for plugin in $selected_plugins; do
-            current_step=$((current_step + 1))
-            echo "$((current_step * 100 / total_steps))"
-            echo "# 处理插件: ${plugin}..."
+    # 下载工具检测
+    if ! command -v wget &> /dev/null; then
+        echo -e "${RED}错误: 需要安装 wget 工具${NC}"
+        apt-get install -y wget || {
+            echo -e "${RED}无法安装 wget，请手动执行: apt-get install wget${NC}"
+            return 1
+        }
+    fi
 
-            # 获取插件元数据
-            local plugin_id=${plugin_map[$plugin]}
-            local api_url="https://api.modrinth.com/v2/project/${plugin_id}/version"
-            local version_info
-            if ! version_info=$(curl -fsSL --retry 3 "$api_url"); then
-                echo "100"
-                dialog --msgbox "${plugin} 元数据获取失败！错误码: $?" 7 50
-                return 1
-            fi
+    declare -a installed_plugins
+    for plugin in $selected_plugins; do
+        echo -e "\n${GREEN}>>> 正在处理 ${plugin}...${NC}"
+        
+        # 获取所有备用源
+        IFS=' ' read -r -a sources <<< "${plugin_sources[$plugin]}"
+        local filename="${plugin}.jar"
+        local temp_file="${install_dir}/${filename}.tmp"
+        local success=0
 
-            # 解析最新兼容版本
-            local version_data
-            version_data=$(jq -r --arg mc_version "$mc_version" \
-                --arg loader "${core_type,,}" \
-                '[.[] | select(
-                    .game_versions[] == $mc_version and 
-                    .loaders[] == $loader and 
-                    .version_type == "release"
-                )] | sort_by(.date_published) | reverse | .[0]' <<< "$version_info")
+        # 多源重试机制
+        for source in "${sources[@]}"; do
+            IFS='|' read -r source_type source_url <<< "$source"
+            
+            echo -e "${YELLOW}[来源: ${source_type}]${NC}"
+            case "$source_type" in
+                "mirror")
+                    if curl -fsSL "$source_url" -o "$temp_file"; then
+                        success=1
+                        break
+                    fi
+                    ;;
+                    
+                "github"|"jenkins"|"spigotmc")
+                    if wget --show-progress -q -O "$temp_file" "$source_url"; then
+                        success=1
+                        break
+                    fi
+                    ;;
+            esac
+            echo -e "${YELLOW}⚠️ 尝试失败，切换备用源...${NC}"
+            rm -f "$temp_file" 2>/dev/null
+            sleep 1
+        done
 
-            if [ "$version_data" = "null" ] || [ -z "$version_data" ]; then
-                echo "100"
-                dialog --msgbox "${plugin} 无兼容版本！" 7 40
-                continue
-            fi
-
-            # 下载插件
-            local download_url=$(jq -r '.files[0].url' <<< "$version_data")
-            local filename="${plugin}.jar"
-            local temp_file="${install_dir}/${filename}.tmp"
-
-            current_step=$((current_step + 1))
-            echo "$((current_step * 100 / total_steps))"
-            echo "# 下载 ${plugin}..."
-
-            if ! wget -q --show-progress --progress=bar:force \
-                -O "$temp_file" "$download_url"; then
-                echo "100"
-                dialog --msgbox "${plugin} 下载失败！" 7 40
-                continue
-            fi
-
-            # 校验文件完整性
-            current_step=$((current_step + 1))
-            echo "$((current_step * 100 / total_steps))"
-            echo "# 验证 ${plugin} 完整性..."
-
-            local expected_hash=$(jq -r '.files[0].hashes.sha1' <<< "$version_data")
-            local actual_hash=$(sha1sum "$temp_file" | cut -d' ' -f1)
-            if [ "$expected_hash" != "$actual_hash" ]; then
+        # 安装验证
+        if [ "$success" -eq 1 ] && [ -f "$temp_file" ]; then
+            # 文件完整性检查（至少1MB）
+            if [ $(stat -c%s "$temp_file") -lt 1000000 ]; then
+                echo -e "${RED}错误: 下载文件过小，可能损坏！${NC}"
                 rm -f "$temp_file"
-                echo "100"
-                dialog --msgbox "${plugin} 文件校验失败！" 7 40
                 continue
             fi
-
-            # 安装插件
-            current_step=$((current_step + 1))
-            echo "$((current_step * 100 / total_steps))"
-            echo "# 安装 ${plugin}..."
-
-            local final_file="${install_dir}/${filename}"
-            if [ -f "$final_file" ]; then
-                local backup_file="${final_file}.bak_$(date +%s)"
-                mv "$final_file" "$backup_file"
-                echo "检测到旧版本，已备份至: $(basename "$backup_file")" >> "${install_dir}/install.log"
-            fi
-
-            mv "$temp_file" "$final_file"
-
-            # 记录安装日志
-            current_step=$((current_step + 1))
-            echo "$((current_step * 100 / total_steps))"
-            echo "# 完成 ${plugin} 安装..."
-
-            installed_plugins+=("${plugin} v$(jq -r '.version_number' <<< "$version_data")")
-            echo "[$(date +%F_%T)] 安装插件: ${plugin} ${mc_version}" >> "${install_dir}/install.log"
-        done
-
-        # 生成安装报告
-        echo "100"
-        echo "# 生成安装报告..."
-        local result_msg="安装目录: $install_dir\n"
-        result_msg+="已安装插件:\n"
-        for p in "${installed_plugins[@]}"; do
-            result_msg+="• $p\n"
-        done
-        result_msg+="\n详细日志请查看: ${install_dir}/install.log"
-
-        sleep 1
-    ) | dialog --gauge "插件安装进度" 12 70 0
+            
+            # 覆盖旧版本
+            [ -f "${install_dir}/${filename}" ] && rm -f "${install_dir}/${filename}"
+            mv "$temp_file" "${install_dir}/${filename}"
+            
+            installed_plugins+=("$plugin")
+            echo -e "${GREEN}✔ 安装成功 (来自: ${source_type})${NC}"
+            echo -e "文件大小: $(du -h "${install_dir}/${filename}" | cut -f1)"
+        else
+            echo -e "${RED}✖ 所有下载源均失败！${NC}"
+            echo -e "请手动下载: ${plugin_sources[$plugin]// / 或 }"
+        fi
+    done
 
     # 显示安装结果
-    dialog --msgbox "插件安装完成！\n\n${result_msg}" 16 60
+    echo -e "\n${GREEN}=== 安装结果 ===${NC}"
+    if [ ${#installed_plugins[@]} -gt 0 ]; then
+        echo -e "已安装插件:"
+        for p in "${installed_plugins[@]}"; do
+            echo -e "  • ${p}"
+        done
+    else
+        echo -e "${YELLOW}⚠️ 没有插件被安装${NC}"
+    fi
+    
+    # 显示失败插件（如果有）
+    local failed_plugins=($(comm -23 <(echo "$selected_plugins" | tr ' ' '\n' | sort) <(printf "%s\n" "${installed_plugins[@]}" | sort)))
+    if [ ${#failed_plugins[@]} -gt 0 ]; then
+        echo -e "\n${RED}失败的插件:${NC}"
+        for p in "${failed_plugins[@]}"; do
+            echo -e "  • ${p} (可尝试手动下载)"
+            echo -e "    下载链接: ${plugin_sources[$p]// / 或 }"
+        done
+    fi
+    
+    echo -e "\n安装目录: ${install_dir}"
+    echo -e "\n按任意键返回主菜单..."
+    read -n 1 -s
 }
+
 
 
 # 检查并安装 dialog
 check_dialog() {
     if ! command -v dialog &> /dev/null; then
         echo -e "${YELLOW}${DIALOG_ERROR}${NC}"
-        if command -v apt &> /dev/null; then
-            apt update && apt install -y dialog || {
+        if command -v apt-get &> /dev/null; then
+            apt-get update && apt-get install -y dialog || {
                 echo -e "${RED}${DIALOG_FAIL}${NC}"
-                echo "apt update &&apt install -y dialog"
+                echo "apt-get update &&apt-get install -y dialog"
                 exit 1
             }
         else
             echo -e "${RED}${DIALOG_FAIL}${NC}"
-            echo "apt update &&apt install -y dialog"
+            echo "apt-get update &&apt-get install -y dialog"
             exit 1
         fi
         if [ "$LANG" = "zh" ]; then
@@ -504,31 +465,8 @@ check_dialog() {
     fi
 }
 
-# 检查并安装 curl 和 jq
-check_curl_jq() {
-    if ! command -v curl &> /dev/null || ! command -v jq &> /dev/null; then
-        dialog --msgbox "回车安装 curl 和 jq..." 10 50
-        if command -v apt &> /dev/null; then
-            apt update && apt install -y curl jq || {
-                dialog --msgbox "获取一言失败，请检查网络或安装 curl 和 jq" 10 50
-                return 1
-            }
-        else
-            dialog --msgbox "获取一言失败，请检查网络或安装 curl 和 jq" 10 50
-            return 1
-        fi
-    fi
-    return 0
-}
 
-# 检查网络连接
-check_network() {
-    if ! ping -c 1 -W 2 www.badu.com &> /dev/null; then
-        dialog --msgbox "网络连接失败，请检查网络设置" 10 50
-        return 1
-    fi
-    return 0
-}
+
 
 
 # Java版本检查并自动安装 Java 21
@@ -574,14 +512,14 @@ check_java() {
 
 # 自动安装 Java 21
 install_java_21() {
-    if command -v apt &> /dev/null; then
-        apt update && apt install -y openjdk-21-jdk || {
+    if command -v apt-get &> /dev/null; then
+        apt-get update && apt-get install -y openjdk-21-jdk || {
             if [ "$LANG" = "zh" ]; then
                 echo -e "${RED}Java 21 安装失败，请手动安装！${NC}"
             else
                 echo -e "${RED}Failed to install Java 21, please install it manually!${NC}"
             fi
-            echo "apt update &&apt install -y openjdk-21-jdk"
+            echo "apt-get update &&apt-get install -y openjdk-21-jdk"
             exit 1
         }
     else
@@ -590,7 +528,7 @@ install_java_21() {
         else
             echo -e "${RED}Unsupported package manager! Please install Java 21 manually:${NC}"
         fi
-        echo "apt update &&apt install -y openjdk-21-jdk"
+        echo "apt-get update &&apt-get install -y openjdk-21-jdk"
         exit 1
     fi
     if [ "$LANG" = "zh" ]; then
@@ -617,6 +555,7 @@ install_core() {
         1) core_name="Fabric" ;;
         2) core_name="Spigot" ;;
         *) return ;;
+        "") break ;;
     esac
 
     # 获取所有可用版本
@@ -637,6 +576,7 @@ install_core() {
                 return 1
             }
             ;;
+            "")break ;;
     esac
 
     [ ${#versions[@]} -eq 0 ] && {
@@ -663,16 +603,7 @@ install_core() {
 
     # 下载核心
     case $core_name in
-        "Paper")
-            local build_info=$(curl -fsSL "https://api.papermc.io/v2/projects/paper/versions/${selected_version}")
-            local build_number=$(jq -r '.builds[-1]' <<< "$build_info")
-            wget -q --show-progress --progress=bar:force "https://api.papermc.io/v2/projects/paper/versions/${selected_version}/builds/${build_number}/downloads/paper-${selected_version}-${build_number}.jar" \
-                -O "${install_dir}/server.jar" || {
-                rm -rf "$install_dir"
-                dialog --msgbox "Paper核心下载失败" 10 50
-                return 1
-            }
-            ;;
+
 
         "Fabric")
             local loader_version=$(curl -fsSL "https://meta.fabricmc.net/v2/versions/loader" |
@@ -750,8 +681,8 @@ main_menu() {
 
     # 检测包管理器
     local pkg_manager="未知"
-    if command -v apt &> /dev/null; then
-        pkg_manager="apt (Debian/Ubuntu)"
+    if command -v apt-get &> /dev/null; then
+        pkg_manager="apt-get (Debian/Ubuntu)"
     elif command -v yum &> /dev/null; then
         pkg_manager="yum (CentOS/RHEL)"
     elif command -v dnf &> /dev/null; then
@@ -769,7 +700,7 @@ main_menu() {
 
     while true; do
         choice=$(create_menu "$dynamic_title" "请选择要执行的操作" \
-            "1" "选择核心类型" \
+            "1" "选择要安装的核心" \
             "2" "选择要启动的核心" \
             "3" "选择要卸载的核心" \
             "4" "配置服务器" \
@@ -1415,13 +1346,14 @@ interactive_cleanup() {
 
 # 主程序
 clear
-apt update -y && apt upgrade -y
+apt-get update -y && apt-get upgrade -y
 echo "$(curl -L https://gitee.com/jiangnan-qwq/AetherCraft_cn/raw/main/公告.txt)"
 sleep 3
 check_language
 check_deps
-check_dependencies
 check_wget
+check_jq
+check_curl
 check_dialog
 check_java
 main_menu
