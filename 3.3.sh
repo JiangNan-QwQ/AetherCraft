@@ -296,25 +296,7 @@ check_deps() {
 
 
 
-# 统一提示信息
-show_info() {
-    echo -e "${RED}bug反馈加QQ1706491377${NC}"
-    echo -e "${RED}B站搜爱做视频のJack_Eason${NC}"
-    echo -e "${RED}最终解释权归B站爱做视频のJack_Eason所有${NC}"
-}
 
-# 检查root权限
-check_root() {
-    if [ "$(id -u)" -ne 0 ]; then
-        echo -e "${RED}非root用户，请以root身份运行！${NC}"
-        show_info
-        sleep 1
-        exit 1
-    fi
-    echo -e "${GREEN}root用户，即将开始执行！${NC}"
-    show_info
-    sleep 1
-}
 install_plugins() {
     # 扫描所有安装的实例
     local instances=()
@@ -1433,8 +1415,9 @@ interactive_cleanup() {
 
 # 主程序
 clear
-check_root
 apt update -y && apt upgrade -y
+echo "$(curl -L https://gitee.com/jiangnan-qwq/AetherCraft_cn/raw/main/公告.txt)"
+sleep 3
 check_language
 check_deps
 check_dependencies
