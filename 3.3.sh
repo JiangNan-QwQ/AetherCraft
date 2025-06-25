@@ -1,8 +1,9 @@
 #!/bin/bash
 # Minecraft Server Management Script by B站搜 爱做视频のJack_Eason
 # Version: 3.3
-# Date: 2025-06-07
-#更新:修复了spigot
+# Date: 2025-06-25
+#更新:修复了spigot   25日修复bug
+
 export LANG=zh_CN.UTF-8
 export LC_ALL=zh_CN.UTF-8
 export NCURSES_NO_UTF8_ACS=1
@@ -645,6 +646,15 @@ EOF
     else
         echo "online-mode=false" > "${install_dir}/server.properties"
     fi
+    # 生成实例配置文件
+cat > "${install_dir}/instance.cfg" <<EOF
+core_type=${core_name}
+mc_version=${selected_version}
+instance_name=${instance_name}
+java_version=21
+install_time=$(date +%FT%T%z)
+EOF
+
 
     dialog --msgbox "安装完成！\n路径: ${install_dir}" 12 50
 }
