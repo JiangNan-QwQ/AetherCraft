@@ -30,6 +30,7 @@ VERSIONS_DIR="${ROOT_DIR}/versions"
 BACKUP_DIR="${ROOT_DIR}/backups"
 TEMP_DIR="${ROOT_DIR}/temp"
 LOG_DIR="${ROOT_DIR}/logs"
+BANNER_SHOWN=false
 
 # 系统信息
 OS_INFO=$(grep PRETTY_NAME /etc/os-release 2>/dev/null | cut -d= -f2 | tr -d '"' || cat /etc/redhat-release 2>/dev/null || echo "未知系统")
@@ -200,17 +201,23 @@ check_resources() {
     return 0
 }
 
-# 显示横幅
 show_banner() {
+    # 如果已经显示过，直接返回
+    if [ "$BANNER_SHOWN" = true ]; then
+        return
+    fi
+
     clear
     if command -v figlet &> /dev/null && command -v lolcat &> /dev/null; then
-        figlet "Aether Craft" | lolcat
+        figlet "Aether" | lolcat && figlet "Craft" | lolcat
     else
         echo -e "${GREEN_BOLD}=== Aether Craft ===${NC}"
     fi
     echo -e "版本: 3.3 | 作者: B站@爱做视频のJack_Eason"
     echo -e "系统: ${OS_INFO} | 内核: ${KERNEL_INFO}"
     echo -e "===================================="
+    sleep 3  # 显示3秒后继续
+    BANNER_SHOWN=true  # 标记为已显示
 }
 
 # 创建目录结构
