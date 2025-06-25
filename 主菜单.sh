@@ -34,4 +34,13 @@ main_menu() {
 # 初始化
 clear
 echo "$(curl -L https://raw.githubusercontent.com/JiangNan-QwQ/AetherCraft/main/公告.txt)"
+sleep 1.5
+clear
+show_banner
+init_directories
+check_resources || error_exit "系统资源检查失败" 1
+check_deps || error_exit "依赖检查失败" 1
+check_java || error_exit "Java安装失败" 1
+sleep 3
+log "公共库初始化完成" "INFO"
 main_menu

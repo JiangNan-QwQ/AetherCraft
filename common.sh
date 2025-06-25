@@ -30,7 +30,8 @@ VERSIONS_DIR="${ROOT_DIR}/versions"
 BACKUP_DIR="${ROOT_DIR}/backups"
 TEMP_DIR="${ROOT_DIR}/temp"
 LOG_DIR="${ROOT_DIR}/logs"
-BANNER_LOCK_FILE="/tmp/mc_banner_shown.lock"
+
+
 
 # 系统信息
 OS_INFO=$(grep PRETTY_NAME /etc/os-release 2>/dev/null | cut -d= -f2 | tr -d '"' || cat /etc/redhat-release 2>/dev/null || echo "未知系统")
@@ -164,11 +165,6 @@ install_java_21() {
 
 # 检查系统资源
 check_resources() {
-
-if [ -f "$BANNER_LOCK_FILE" ]; then
-        return
-    fi
-
     local total_ram=$(free -m | awk '/Mem:/ {print $2}')
     local free_ram=$(free -m | awk '/Mem:/ {print $4}')
     local total_disk=$(df -h --output=size / | tail -n1 | tr -d ' ')
@@ -207,10 +203,6 @@ if [ -f "$BANNER_LOCK_FILE" ]; then
 }
 
 show_banner() {
-    if [ -f "$BANNER_LOCK_FILE" ]; then
-        return
-    fi
-
     clear
     if command -v figlet &> /dev/null && command -v lolcat &> /dev/null; then
         figlet "Aether" | lolcat && figlet "Craft" | lolcat
@@ -220,8 +212,7 @@ show_banner() {
     echo -e "版本: 3.3 | 作者: B站@爱做视频のJack_Eason"
     echo -e "系统: ${OS_INFO} | 内核: ${KERNEL_INFO}"
     echo -e "===================================="
-    sleep 2
-    touch "$BANNER_LOCK_FILE"  # 创建锁文件，标记已显示
+    sleep 3
 }
 
 # 创建目录结构
@@ -327,12 +318,3 @@ cleanup_temp() {
 
 # 脚本退出时的清理
 trap cleanup_temp EXIT
-
-# 初始化
-show_banner
-init_directories
-check_resources || error_exit "系统资源检查失败" 1
-check_deps || error_exit "依赖检查失败" 1
-check_java || error_exit "Java安装失败" 1
-sleep 3
-log "公共库初始化完成" "INFO"
