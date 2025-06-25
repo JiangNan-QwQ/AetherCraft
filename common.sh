@@ -164,6 +164,11 @@ install_java_21() {
 
 # 检查系统资源
 check_resources() {
+
+if [ -f "$BANNER_LOCK_FILE" ]; then
+        return
+    fi
+
     local total_ram=$(free -m | awk '/Mem:/ {print $2}')
     local free_ram=$(free -m | awk '/Mem:/ {print $4}')
     local total_disk=$(df -h --output=size / | tail -n1 | tr -d ' ')
