@@ -204,7 +204,7 @@ check_resources() {
 show_banner() {
     clear
     if command -v figlet &> /dev/null && command -v lolcat &> /dev/null; then
-        figlet "Minecraft Manager" | lolcat
+        figlet "Aether Craft" | lolcat
     else
         echo -e "${GREEN_BOLD}=== Minecraft 服务器管理脚本 ===${NC}"
     fi
