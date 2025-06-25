@@ -11,7 +11,7 @@ check_java
 # 主菜单
 main_menu() {
     while true; do
-        choice=$(dialog --menu "Minecraft服务器管理" 15 50 5 \
+        choice=$(dialog --menu "Aether Craft 服务器管理脚本" 15 50 5 \
             "1" "安装服务器" \
             "2" "启动服务器" \
             "3" "配置服务器" \
