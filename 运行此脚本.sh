@@ -18,5 +18,5 @@ cd ~
 pkg install -y curl ; bash -c "$(curl -L https://raw.githubusercontent.com/JiangNan-QwQ/AetherCraft/main/容器.sh)"
 else
     echo "检测到运行环境: 标准Linux系统"
-bash -c "$(curl -L https://raw.githubusercontent.com/JiangNan-QwQ/AetherCraft/main/3.3.sh)"
+bash -c "$(curl -L https://raw.githubusercontent.com/JiangNan-QwQ/AetherCraft/main/主菜单.sh)"
    fi

@@ -26,13 +26,21 @@ fi
 done
 if [ ! -f "$FIRST_LOGIN" ]; then
 touch "$FIRST_LOGIN"  # 创建标记文件
-    echo "欢迎，即将进入"
+    echo "换源。。。"
     sleep 1
-bash -c "$(curl -L https://raw.githubusercontent.com/JiangNan-QwQ/AetherCraft/main/3.3.sh)"
+    
+    
+    
+    ########
+    Jack_Eason
+   #####手动制造错误退出proot并换源#####
+   
+    
+proot-distro login ubuntu -- bash -c 'bash -c "$(curl -L https://raw.githubusercontent.com/JiangNan-QwQ/AetherCraft/main/容器换源.sh)"'
 else
     echo "欢迎，即将进入"
     sleep 1
-    proot-distro login ubuntu -- bash -c 'bash -c "$(curl -L https://raw.githubusercontent.com/JiangNan-QwQ/AetherCraft/main/3.3.sh)"'
+    proot-distro login ubuntu -- bash -c 'bash -c "$(curl -L https://raw.githubusercontent.com/JiangNan-QwQ/AetherCraft/main/主菜单.sh)"'
 
  proot-distro login ubuntu
 fi
