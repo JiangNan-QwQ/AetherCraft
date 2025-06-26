@@ -695,7 +695,7 @@ echo "${instances[@]}"
 #检查服务器运行状态
 
 check_server_status() {
-local instance= 1
+local instance="$1"
 if pgrep -f "java -jar  {VERSIONS_DIR}/${instance}/server.jar" >/dev/null; then
 return 0  # 运行中
 else

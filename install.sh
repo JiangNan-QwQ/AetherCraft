@@ -13,15 +13,100 @@ install_menu() {
         choice=$(dialog --menu "服务器安装选项" 15 50 5 \
             "1" "安装新服务器实例" \
             "2" "查看已安装实例" \
-            "3" "返回主菜单" 2>&1 >/dev/tty)
+            "3" "卸载服务器实例" \
+            "4" "返回主菜单" 2>&1 >/dev/tty)
             
         case "$choice" in
             1) install_core ;;
             2) list_instances ;;
-            3) return 0 ;;
+            3) stop_instance ;;
+            4) return 0 ;;
             *) log "无效选项" "WARN";;
         esac
     done
+}
+# 卸载服务器实例
+uninstall_instance() {
+    # 获取实例列表
+    local instances=($(get_instance_list))
+    
+    if [ ${#instances[@]} -eq 0 ]; then
+        dialog --msgbox "没有找到已安装的服务器实例" 8 40
+        return
+    fi
+    
+    # 生成菜单项
+    local menu_items=()
+    for instance in "${instances[@]}"; do
+        local install_dir="${VERSIONS_DIR}/${instance}"
+        local size=$(du -sh "$install_dir" | cut -f1)
+        menu_items+=("$instance" "大小: $size")
+    done
+    
+    # 选择要卸载的实例
+    local selected=$(dialog --menu "选择要卸载的实例" 20 70 15 \
+        "${menu_items[@]}" 2>&1 >/dev/tty)
+    [ -z "$selected" ] && return
+    
+    # 确认卸载
+    dialog --yesno "确定要完全卸载实例 ${selected} 吗？此操作不可逆！" 10 50 || return
+    
+    # 停止运行中的实例
+    if check_server_status "$selected"; then
+        stop_instance "$selected" || {
+            dialog --msgbox "无法停止服务器，卸载中止" 8 40
+            return 1
+        }
+    fi
+    
+    # 执行卸载
+    (
+        echo "10"
+        echo "# 正在删除实例文件..."
+        rm -rf "${VERSIONS_DIR}/${selected}"
+        
+        echo "50"
+        echo "# 清理备份文件..."
+        find "${BACKUP_DIR}" -name "${selected}-*" -exec rm -f {} \;
+        
+        echo "100"
+        echo "# 卸载完成!"
+    ) | dialog --gauge "正在卸载实例 ${selected}" 8 70 0
+    
+    dialog --msgbox "实例 ${selected} 已成功卸载" 8 40
+}
+
+stop_instance() {
+    local instance=$1
+    local instance_dir="${VERSIONS_DIR}/${instance}"
+    
+    if ! check_server_status "$instance"; then
+        return 0
+    fi
+    
+    # 发送停止命令
+    echo "stop" > "${instance_dir}/command_input"
+    
+    # 等待最多10秒
+    local timeout=10
+    while [ $timeout -gt 0 ]; do
+        if ! check_server_status "$instance"; then
+            return 0
+        fi
+        sleep 1
+        ((timeout--))
+    done
+    
+    # 如果仍然运行，强制终止
+    if check_server_status "$instance"; then
+        pkill -f "java -jar ${instance_dir}/server.jar"
+        sleep 2
+        if check_server_status "$instance"; then
+            return 1
+        fi
+    fi
+    
+    return 0
 }
 
 # 安装核心服务器
@@ -202,11 +287,7 @@ download_fabric() {
         return 1
     fi
 
-    # 验证文件大小
-    if [ $(stat -c%s "${install_dir}/server.jar") -lt 1000000 ]; then
-        log "下载的Fabric文件过小，可能损坏" "ERROR"
-        return 1
-    fi
+   
 
     log "Fabric ${version} 下载成功" "SUCCESS"
     return 0

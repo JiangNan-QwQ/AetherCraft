@@ -516,8 +516,8 @@ done
 #获取实例版本
 
 get_instance_version() {
-local instance= 1
-local instance_dir=" {VERSIONS_DIR}/${instance}"
+local instance="$1"
+local instance_dir="${VERSIONS_DIR}/${instance}"
 
 if [ -f "${instance_dir}/instance.cfg" ]; then
     source "${instance_dir}/instance.cfg"
@@ -531,8 +531,8 @@ fi
 #获取服务器端口
 
 get_server_port() {
-local instance= 1
-local instance_dir=" {VERSIONS_DIR}/${instance}"
+local instance="$1"
+local instance_dir="${VERSIONS_DIR}/${instance}"
 
 if [ -f "${instance_dir}/server.properties" ]; then
     grep "^server-port=" "${instance_dir}/server.properties" | cut -d= -f2
@@ -545,23 +545,35 @@ fi
 #检查服务器运行状态
 
 check_server_status() {
-local instance= 1
-if pgrep -f "java -jar  {VERSIONS_DIR}/${instance}/server.jar" >/dev/null; then
-return 0  # 运行中
-else
-return 1  # 已停止
-fi
+    local instance="$1"  
+    if pgrep -f "java -jar ${VERSIONS_DIR}/${instance}/server.jar" >/dev/null; then
+        return 0  # 运行中
+    else
+        return 1  # 已停止
+    fi
 }
+
 
 #获取实例列表
 
 get_instance_list() {
-local instances=()
-while IFS= read -r -d  '\0' dir; do
-instances+=(" (basename " dir")")
-done < <(find " VERSIONS_DIR" -maxdepth 1 -type d -name "*" -print0)
-echo "${instances[@]}"
+    # 确保变量已加载
+    [ -z "${VERSIONS_DIR:-}" ] && VERSIONS_DIR="/root/versions"
+    
+    # 检查目录是否存在
+    if [ ! -d "$VERSIONS_DIR" ]; then
+        log "错误: 目录 $VERSIONS_DIR 不存在" "ERROR"
+        return 1
+    fi
+
+    local instances=()
+    while IFS= read -r -d $'\0' dir; do
+        instances+=("$(basename "$dir")")
+    done < <(find "$VERSIONS_DIR" -maxdepth 1 -type d -name "*" -print0 2>/dev/null)
+
+    echo "${instances[@]}"
 }
+
 
 #主入口
 

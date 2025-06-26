@@ -559,7 +559,7 @@ check_server_status() {
 #重启服务器实例
 
 restart_instance() {
-local instance= 1
+local instance="$1"
 local instance_dir=" {VERSIONS_DIR}/${instance}"
 
 if check_server_status "$instance"; then

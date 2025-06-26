@@ -4,9 +4,10 @@
 # 版本: 3.3
 # 日期: 2025-06-25
 
+
 # 确保使用UTF-8编码
-export LANG=zh_CN.UTF-8
-export LC_ALL=zh_CN.UTF-8
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
 export NCURSES_NO_UTF8_ACS=1
 
 # 颜色定义
