@@ -5,7 +5,7 @@
 # 日期: 2025-06-25
 
 # 加载公共库
-source <(curl -s https://raw.githubusercontent.com/yourrepo/mc-manager/main/lib/common.sh)
+source <(curl -s https://raw.githubusercontent.com/JiangNan-QwQ/AetherCraft/main/common.sh)
 
 # 备份主菜单
 backup_menu() {
