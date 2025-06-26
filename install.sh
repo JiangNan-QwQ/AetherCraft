@@ -19,12 +19,13 @@ install_menu() {
         case "$choice" in
             1) install_core ;;
             2) list_instances ;;
-            3) stop_instance ;;
+            3) uninstall_instance ;;
             4) return 0 ;;
             *) log "无效选项" "WARN";;
         esac
     done
 }
+
 # 卸载服务器实例
 uninstall_instance() {
     # 获取实例列表
@@ -118,16 +119,22 @@ install_core() {
     }
 
     # 核心类型选择
-    local core_type=$(dialog --menu "选择服务器核心" 15 50 5 \
+    local core_type=$(dialog --menu "选择服务器核心" 15 50 7 \
         "1" "Fabric (适合模组)" \
         "2" "Spigot (适合插件)" \
         "3" "Paper (手机Termux不可用)" \
+        "4" "Forge (适合大型模组)" \
+        "5" "Vanilla (官方原版)" \
+        "6" "Bedrock (基岩版)" \
         2>&1 >/dev/tty) || return 0
 
     case $core_type in
         1) core_name="Fabric" ;;
         2) core_name="Spigot" ;;
         3) core_name="Paper" ;;
+        4) core_name="Forge" ;;
+        5) core_name="Vanilla" ;;
+        6) core_name="Bedrock" ;;
         *) return ;;
     esac
 
@@ -157,6 +164,25 @@ install_core() {
                 dialog --msgbox "无法获取Paper版本信息" 10 50
                 return 1
             }
+            ;;
+        "Forge")
+            log "正在获取Forge版本列表..." "INFO"
+            versions=($(curl -fsSL "https://files.minecraftforge.net/net/minecraftforge/forge/maven-metadata.json" | \
+                      jq -r '.versioning.versions[]' | grep -Eo '[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -Vr | uniq | head -n 10)) || {
+                dialog --msgbox "无法获取Forge版本信息" 10 50
+                return 1
+            }
+            ;;
+        "Vanilla")
+            log "正在获取Vanilla版本列表..." "INFO"
+            versions=($(curl -fsSL "https://launchermeta.mojang.com/mc/game/version_manifest.json" | \
+                      jq -r '.versions[] | .id' | sort -Vr | head -n 10)) || {
+                dialog --msgbox "无法获取Vanilla版本信息" 10 50
+                return 1
+            }
+            ;;
+        "Bedrock")
+            versions=("latest")  # Bedrock通常只有一个最新版本
             ;;
     esac
 
@@ -207,6 +233,21 @@ install_core() {
                     return 1
                 fi
                 ;;
+            "Forge")
+                if ! curl -fsSL "https://files.minecraftforge.net/net/minecraftforge/forge/maven-metadata.json" | jq -r '.versioning.versions[]' | grep -qE "${selected_version//./\\.}"; then
+                    dialog --msgbox "错误：Forge ${selected_version} 版本不存在！" 10 50
+                    return 1
+                fi
+                ;;
+            "Vanilla")
+                if ! curl -fsSL "https://launchermeta.mojang.com/mc/game/version_manifest.json" | jq -r '.versions[] | .id' | grep -q "^${selected_version}$"; then
+                    dialog --msgbox "错误：Vanilla ${selected_version} 版本不存在！" 10 50
+                    return 1
+                fi
+                ;;
+            "Bedrock")
+                selected_version="latest"  # Bedrock只支持最新版
+                ;;
         esac
         
         dialog --msgbox "正在准备安装 ${core_name} ${selected_version}..." 10 50
@@ -249,16 +290,34 @@ install_core() {
                 return 1
             }
             ;;
+        "Forge")
+            download_forge "$selected_version" "$install_dir" || {
+                rm -rf "$install_dir"
+                return 1
+            }
+            ;;
+        "Vanilla")
+            download_vanilla "$selected_version" "$install_dir" || {
+                rm -rf "$install_dir"
+                return 1
+            }
+            ;;
+        "Bedrock")
+            download_bedrock "$selected_version" "$install_dir" || {
+                rm -rf "$install_dir"
+                return 1
+            }
+            ;;
     esac
 
     # 生成启动脚本
-    generate_start_script "$install_dir"
+    generate_start_script "$install_dir" "$core_name"
 
     # 自动同意EULA
     echo "eula=true" > "${install_dir}/eula.txt"
 
     # 生成默认配置文件
-    generate_server_properties "$install_dir"
+    generate_server_properties "$install_dir" "$core_name"
 
     # 生成实例配置文件
     generate_instance_config "$core_name" "$selected_version" "$instance_name" "$install_dir"
@@ -286,8 +345,6 @@ download_fabric() {
         log "Fabric核心下载失败: ${download_url}" "ERROR"
         return 1
     fi
-
-   
 
     log "Fabric ${version} 下载成功" "SUCCESS"
     return 0
@@ -412,11 +469,120 @@ download_paper() {
     return 0
 }
 
+# 下载Forge核心
+download_forge() {
+    local version=$1
+    local install_dir=$2
+
+    log "正在获取Forge ${version}下载链接..." "INFO"
+    
+    # 获取Forge版本信息
+    local forge_versions=$(curl -fsSL "https://files.minecraftforge.net/net/minecraftforge/forge/maven-metadata.json")
+    local forge_version=$(echo "$forge_versions" | jq -r ".versioning.versions[] | select(startswith(\"${version}-\"))" | sort -Vr | head -1)
+    
+    if [ -z "$forge_version" ]; then
+        dialog --msgbox "无法找到Forge ${version}版本" 10 50
+        return 1
+    fi
+    
+    local download_url="https://maven.minecraftforge.net/net/minecraftforge/forge/${forge_version}/forge-${forge_version}-installer.jar"
+    
+    # 下载Forge安装器
+    if ! wget --show-progress -q -O "${TEMP_DIR}/forge-installer.jar" "$download_url"; then
+        log "Forge安装器下载失败" "ERROR"
+        return 1
+    fi
+    
+    # 运行安装器
+    (
+        cd "$install_dir"
+        java -jar "${TEMP_DIR}/forge-installer.jar" --installServer
+        rm -f "${TEMP_DIR}/forge-installer.jar"
+    )
+    
+    # 重命名生成的jar文件
+    local forge_jar=$(ls "${install_dir}" | grep -E "forge-${version}-.*\.jar")
+    mv "${install_dir}/${forge_jar}" "${install_dir}/server.jar"
+    
+    log "Forge ${version} 安装完成" "SUCCESS"
+    return 0
+}
+
+# 下载Vanilla核心
+download_vanilla() {
+    local version=$1
+    local install_dir=$2
+
+    log "正在下载Vanilla ${version}..." "INFO"
+    
+    local manifest=$(curl -fsSL "https://launchermeta.mojang.com/mc/game/version_manifest.json")
+    local version_url=$(echo "$manifest" | jq -r ".versions[] | select(.id == \"${version}\") | .url")
+    
+    if [ -z "$version_url" ]; then
+        dialog --msgbox "无法找到Vanilla ${version}版本" 10 50
+        return 1
+    fi
+    
+    local download_url=$(curl -fsSL "$version_url" | jq -r ".downloads.server.url")
+    
+    if ! wget --show-progress -q -O "${install_dir}/server.jar" "$download_url"; then
+        log "Vanilla核心下载失败" "ERROR"
+        return 1
+    fi
+    
+    log "Vanilla ${version} 下载完成" "SUCCESS"
+    return 0
+}
+
+# 下载Bedrock核心
+download_bedrock() {
+    local version=$1
+    local install_dir=$2
+
+    log "正在下载Bedrock Server ${version}..." "INFO"
+    
+    # 获取最新Bedrock服务器下载链接
+    local download_page=$(curl -fsSL "https://www.minecraft.net/en-us/download/server/bedrock")
+    local download_url=$(echo "$download_page" | grep -oP "https://[^\"]+/bin-linux/[^\"]+")
+    
+    if [ -z "$download_url" ]; then
+        dialog --msgbox "无法获取Bedrock服务器下载链接" 10 50
+        return 1
+    fi
+    
+    # 下载并解压
+    if ! wget --show-progress -q -O "${TEMP_DIR}/bedrock.zip" "$download_url"; then
+        log "Bedrock服务器下载失败" "ERROR"
+        return 1
+    fi
+    
+    unzip -q "${TEMP_DIR}/bedrock.zip" -d "$install_dir"
+    rm -f "${TEMP_DIR}/bedrock.zip"
+    
+    # 确保可执行权限
+    chmod +x "${install_dir}/bedrock_server"
+    
+    log "Bedrock服务器安装完成" "SUCCESS"
+    return 0
+}
+
 # 生成启动脚本
 generate_start_script() {
     local install_dir=$1
+    local core_name=$2
     
-    cat > "${install_dir}/start.sh" <<EOF
+    # Bedrock服务器使用不同的启动脚本
+    if [[ "$core_name" == "Bedrock" ]]; then
+        cat > "${install_dir}/start.sh" <<EOF
+#!/bin/bash
+# Bedrock服务器启动脚本
+# 自动生成于 $(date)
+
+# 启动服务器
+./bedrock_server
+EOF
+    else
+        cat > "${install_dir}/start.sh" <<EOF
 #!/bin/bash
 # Minecraft服务器启动脚本
 # 自动生成于 $(date)
@@ -432,6 +598,7 @@ JAVA_ARGS="\${JAVA_ARGS} -Dusing.aikars.flags=https://mcflags.emc.gs"
 # 启动服务器
 java \$JAVA_ARGS -jar server.jar nogui
 EOF
+    fi
 
     chmod +x "${install_dir}/start.sh"
 }
@@ -439,6 +606,35 @@ EOF
 # 生成服务器配置文件
 generate_server_properties() {
     local install_dir=$1
+    local core_name=$2
+    
+    # Bedrock服务器使用不同的配置文件
+    if [[ "$core_name" == "Bedrock" ]]; then
+        if [ ! -f "${install_dir}/server.properties" ]; then
+            cat > "${install_dir}/server.properties" <<EOF
+# Bedrock服务器配置
+server-name=Dedicated Server
+gamemode=survival
+difficulty=easy
+allow-cheats=false
+max-players=10
+online-mode=true
+white-list=false
+server-port=19132
+server-portv6=19133
+view-distance=10
+tick-distance=4
+player-idle-timeout=30
+max-threads=8
+level-name=Bedrock level
+level-seed=
+default-player-permission-level=member
+texturepack-required=false
+content-log-file-enabled=false
+EOF
+        fi
+        return
+    fi
     
     # 首次运行生成默认配置
     if [ ! -f "${install_dir}/server.properties" ]; then
@@ -586,6 +782,12 @@ list_instances() {
     done
     
     dialog --menu "已安装的服务器实例" 20 60 12 "${instance_info[@]}" 2>&1 >/dev/tty
+}
+
+# 验证版本号格式
+validate_version() {
+    local version="$1"
+    [[ "$version" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]
 }
 
 # 主入口

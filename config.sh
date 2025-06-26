@@ -21,7 +21,9 @@ config_menu() {
         # 生成菜单项
         local menu_items=()
         for instance in "${instances[@]}"; do
-            menu_items+=("$instance" "版本: $(get_instance_version "$instance")")
+            local version=$(get_instance_version "$instance")
+            local port=$(get_server_port "$instance")
+            menu_items+=("$instance" "版本: $version | 端口: $port")
         done
 
         local choice=$(dialog --menu "选择要配置的实例" 20 70 15 \
@@ -42,12 +44,6 @@ instance_config() {
     while true; do
         # 获取当前配置
         local server_port=$(get_server_port "$instance")
-        local max_players=$(grep "^max-players=" "${instance_dir}/server.properties" | cut -d= -f2 || echo "20")
-        local view_distance=$(grep "^view-distance=" "${instance_dir}/server.properties" | cut -d= -f2 || echo "10")
-        local difficulty=$(grep "^difficulty=" "${instance_dir}/server.properties" | cut -d= -f2 || echo "easy")
-        local gamemode=$(grep "^gamemode=" "${instance_dir}/server.properties" | cut -d= -f2 || echo "survival")
-        local pvp=$(grep "^pvp=" "${instance_dir}/server.properties" | cut -d= -f2 || echo "true")
-        local online_mode=$(grep "^online-mode=" "${instance_dir}/server.properties" | cut -d= -f2 || echo "false")
         
         # 操作菜单
         local action=$(dialog --menu "配置实例: ${instance}" 22 70 12 \
@@ -77,6 +73,12 @@ instance_config() {
 basic_settings() {
     local instance=$1
     local instance_dir="${VERSIONS_DIR}/${instance}"
+    
+    # Bedrock服务器特殊处理
+    if [[ "$instance" == *"Bedrock"* ]]; then
+        bedrock_basic_settings "$instance"
+        return
+    fi
     
     while true; do
         # 获取当前值
@@ -153,10 +155,84 @@ basic_settings() {
     done
 }
 
+# Bedrock服务器基本设置
+bedrock_basic_settings() {
+    local instance=$1
+    local instance_dir="${VERSIONS_DIR}/${instance}"
+    
+    while true; do
+        # 获取当前值
+        local current_server_name=$(grep "^server-name=" "${instance_dir}/server.properties" | cut -d= -f2)
+        local current_gamemode=$(grep "^gamemode=" "${instance_dir}/server.properties" | cut -d= -f2)
+        local current_difficulty=$(grep "^difficulty=" "${instance_dir}/server.properties" | cut -d= -f2)
+        local current_max_players=$(grep "^max-players=" "${instance_dir}/server.properties" | cut -d= -f2)
+        local current_allow_cheats=$(grep "^allow-cheats=" "${instance_dir}/server.properties" | cut -d= -f2)
+        
+        # 对话框
+        local choice=$(dialog --menu "Bedrock基本设置 - ${instance}" 18 60 12 \
+            "server_name" "服务器名称 (当前: ${current_server_name:0:20}...)" \
+            "gamemode" "游戏模式 (当前: ${current_gamemode})" \
+            "difficulty" "难度 (当前: ${current_difficulty})" \
+            "max_players" "最大玩家数 (当前: ${current_max_players})" \
+            "allow_cheats" "允许作弊 (当前: ${current_allow_cheats})" \
+            "back" "返回" 2>&1 >/dev/tty)
+        
+        [ -z "$choice" ] && return
+        
+        case "$choice" in
+            "server_name")
+                local new_name=$(dialog --inputbox "输入服务器名称:" 10 50 "$current_server_name" 2>&1 >/dev/tty)
+                [ -n "$new_name" ] && sed -i "s/^server-name=.*/server-name=${new_name}/" "${instance_dir}/server.properties"
+                ;;
+                
+            "gamemode")
+                local new_gm=$(dialog --menu "选择游戏模式" 12 40 3 \
+                    "survival" "生存模式" \
+                    "creative" "创造模式" \
+                    "adventure" "冒险模式" 2>&1 >/dev/tty)
+                [ -n "$new_gm" ] && sed -i "s/^gamemode=.*/gamemode=${new_gm}/" "${instance_dir}/server.properties"
+                ;;
+                
+            "difficulty")
+                local new_diff=$(dialog --menu "选择难度" 12 40 4 \
+                    "peaceful" "和平" \
+                    "easy" "简单" \
+                    "normal" "普通" \
+                    "hard" "困难" 2>&1 >/dev/tty)
+                [ -n "$new_diff" ] && sed -i "s/^difficulty=.*/difficulty=${new_diff}/" "${instance_dir}/server.properties"
+                ;;
+                
+            "max_players")
+                local new_max=$(dialog --inputbox "输入最大玩家数 (1-30):" 10 50 "$current_max_players" 2>&1 >/dev/tty)
+                if [[ "$new_max" =~ ^[0-9]+$ ]] && [ "$new_max" -ge 1 ] && [ "$new_max" -le 30 ]; then
+                    sed -i "s/^max-players=.*/max-players=${new_max}/" "${instance_dir}/server.properties"
+                else
+                    dialog --msgbox "无效的玩家数量！" 8 40
+                fi
+                ;;
+                
+            "allow_cheats")
+                local new_cheats=$(dialog --menu "允许作弊" 12 40 2 \
+                    "true" "启用" \
+                    "false" "禁用" 2>&1 >/dev/tty)
+                [ -n "$new_cheats" ] && sed -i "s/^allow-cheats=.*/allow-cheats=${new_cheats}/" "${instance_dir}/server.properties"
+                ;;
+                
+            "back") return ;;
+        esac
+    done
+}
+
 # 网络设置
 network_settings() {
     local instance=$1
     local instance_dir="${VERSIONS_DIR}/${instance}"
+    
+    # Bedrock服务器特殊处理
+    if [[ "$instance" == *"Bedrock"* ]]; then
+        bedrock_network_settings "$instance"
+        return
+    fi
     
     while true; do
         # 获取当前值
@@ -251,10 +327,72 @@ network_settings() {
     done
 }
 
+# Bedrock网络设置
+bedrock_network_settings() {
+    local instance=$1
+    local instance_dir="${VERSIONS_DIR}/${instance}"
+    
+    while true; do
+        # 获取当前值
+        local current_port=$(get_server_port "$instance")
+        local current_online_mode=$(grep "^online-mode=" "${instance_dir}/server.properties" | cut -d= -f2)
+        local current_ipv6_port=$(grep "^server-portv6=" "${instance_dir}/server.properties" | cut -d= -f2)
+        
+        # 对话框
+        local choice=$(dialog --menu "Bedrock网络设置 - ${instance}" 18 60 12 \
+            "port" "服务器端口 (当前: ${current_port})" \
+            "ipv6_port" "IPv6端口 (当前: ${current_ipv6_port})" \
+            "online_mode" "正版验证 (当前: ${current_online_mode})" \
+            "back" "返回" 2>&1 >/dev/tty)
+        
+        [ -z "$choice" ] && return
+        
+        case "$choice" in
+            "port")
+                local new_port=$(dialog --inputbox "输入服务器端口 (1-65535):" 10 50 "$current_port" 2>&1 >/dev/tty)
+                if [[ "$new_port" =~ ^[0-9]+$ ]] && [ "$new_port" -ge 1 ] && [ "$new_port" -le 65535 ]; then
+                    sed -i "s/^server-port=.*/server-port=${new_port}/" "${instance_dir}/server.properties"
+                    dialog --msgbox "端口已修改为 ${new_port}" 8 40
+                else
+                    dialog --msgbox "无效的端口号！" 8 40
+                fi
+                ;;
+                
+            "ipv6_port")
+                local new_port=$(dialog --inputbox "输入IPv6端口 (1-65535):" 10 50 "$current_ipv6_port" 2>&1 >/dev/tty)
+                if [[ "$new_port" =~ ^[0-9]+$ ]] && [ "$new_port" -ge 1 ] && [ "$new_port" -le 65535 ]; then
+                    sed -i "s/^server-portv6=.*/server-portv6=${new_port}/" "${instance_dir}/server.properties"
+                    dialog --msgbox "IPv6端口已修改为 ${new_port}" 8 40
+                else
+                    dialog --msgbox "无效的端口号！" 8 40
+                fi
+                ;;
+                
+            "online_mode")
+                local new_om=$(dialog --menu "正版验证设置" 12 50 2 \
+                    "true" "启用 (仅正版玩家)" \
+                    "false" "禁用 (离线模式)" 2>&1 >/dev/tty)
+                [ -n "$new_om" ] && {
+                    sed -i "s/^online-mode=.*/online-mode=${new_om}/" "${instance_dir}/server.properties"
+                    dialog --msgbox "正版验证已${new_om}" 8 40
+                }
+                ;;
+                
+            "back") return ;;
+        esac
+    done
+}
+
 # 世界设置
 world_settings() {
     local instance=$1
     local instance_dir="${VERSIONS_DIR}/${instance}"
+    
+    # Bedrock服务器特殊处理
+    if [[ "$instance" == *"Bedrock"* ]]; then
+        bedrock_world_settings "$instance"
+        return
+    fi
     
     while true; do
         # 获取当前值
@@ -317,10 +455,72 @@ world_settings() {
     done
 }
 
+# Bedrock世界设置
+bedrock_world_settings() {
+    local instance=$1
+    local instance_dir="${VERSIONS_DIR}/${instance}"
+    
+    while true; do
+        # 获取当前值
+        local current_level_name=$(grep "^level-name=" "${instance_dir}/server.properties" | cut -d= -f2)
+        local current_level_seed=$(grep "^level-seed=" "${instance_dir}/server.properties" | cut -d= -f2)
+        local current_view_distance=$(grep "^view-distance=" "${instance_dir}/server.properties" | cut -d= -f2)
+        local current_tick_distance=$(grep "^tick-distance=" "${instance_dir}/server.properties" | cut -d= -f2)
+        
+        # 对话框
+        local choice=$(dialog --menu "Bedrock世界设置 - ${instance}" 18 60 12 \
+            "level_name" "世界名称 (当前: ${current_level_name})" \
+            "level_seed" "世界种子 (当前: ${current_level_seed})" \
+            "view_distance" "视距 (当前: ${current_view_distance})" \
+            "tick_distance" "Tick距离 (当前: ${current_tick_distance})" \
+            "back" "返回" 2>&1 >/dev/tty)
+        
+        [ -z "$choice" ] && return
+        
+        case "$choice" in
+            "level_name")
+                local new_name=$(dialog --inputbox "输入世界名称:" 10 50 "$current_level_name" 2>&1 >/dev/tty)
+                [ -n "$new_name" ] && sed -i "s/^level-name=.*/level-name=${new_name}/" "${instance_dir}/server.properties"
+                ;;
+                
+            "level_seed")
+                local new_seed=$(dialog --inputbox "输入世界种子 (留空随机):" 10 50 "$current_level_seed" 2>&1 >/dev/tty)
+                sed -i "s/^level-seed=.*/level-seed=${new_seed}/" "${instance_dir}/server.properties"
+                ;;
+                
+            "view_distance")
+                local new_vd=$(dialog --inputbox "输入视距 (4-64):" 10 50 "$current_view_distance" 2>&1 >/dev/tty)
+                if [[ "$new_vd" =~ ^[0-9]+$ ]] && [ "$new_vd" -ge 4 ] && [ "$new_vd" -le 64 ]; then
+                    sed -i "s/^view-distance=.*/view-distance=${new_vd}/" "${instance_dir}/server.properties"
+                else
+                    dialog --msgbox "无效的视距值！" 8 40
+                fi
+                ;;
+                
+            "tick_distance")
+                local new_td=$(dialog --inputbox "输入Tick距离 (4-12):" 10 50 "$current_tick_distance" 2>&1 >/dev/tty)
+                if [[ "$new_td" =~ ^[0-9]+$ ]] && [ "$new_td" -ge 4 ] && [ "$new_td" -le 12 ]; then
+                    sed -i "s/^tick-distance=.*/tick-distance=${new_td}/" "${instance_dir}/server.properties"
+                else
+                    dialog --msgbox "无效的Tick距离！" 8 40
+                fi
+                ;;
+                
+            "back") return ;;
+        esac
+    done
+}
+
 # 性能设置
 performance_settings() {
     local instance=$1
     local instance_dir="${VERSIONS_DIR}/${instance}"
+    
+    # Bedrock服务器特殊处理
+    if [[ "$instance" == *"Bedrock"* ]]; then
+        bedrock_performance_settings "$instance"
+        return
+    fi
     
     while true; do
         # 获取当前值
@@ -368,10 +568,58 @@ performance_settings() {
     done
 }
 
+# Bedrock性能设置
+bedrock_performance_settings() {
+    local instance=$1
+    local instance_dir="${VERSIONS_DIR}/${instance}"
+    
+    while true; do
+        # 获取当前值
+        local current_max_threads=$(grep "^max-threads=" "${instance_dir}/server.properties" | cut -d= -f2)
+        local current_player_idle_timeout=$(grep "^player-idle-timeout=" "${instance_dir}/server.properties" | cut -d= -f2)
+        
+        # 对话框
+        local choice=$(dialog --menu "Bedrock性能设置 - ${instance}" 18 60 12 \
+            "max_threads" "最大线程数 (当前: ${current_max_threads})" \
+            "player_idle_timeout" "玩家空闲超时 (当前: ${current_player_idle_timeout})" \
+            "back" "返回" 2>&1 >/dev/tty)
+        
+        [ -z "$choice" ] && return
+        
+        case "$choice" in
+            "max_threads")
+                local new_mt=$(dialog --inputbox "输入最大线程数 (1-16):" 10 50 "$current_max_threads" 2>&1 >/dev/tty)
+                if [[ "$new_mt" =~ ^[0-9]+$ ]] && [ "$new_mt" -ge 1 ] && [ "$new_mt" -le 16 ]; then
+                    sed -i "s/^max-threads=.*/max-threads=${new_mt}/" "${instance_dir}/server.properties"
+                else
+                    dialog --msgbox "无效的线程数！" 8 40
+                fi
+                ;;
+                
+            "player_idle_timeout")
+                local new_pit=$(dialog --inputbox "输入玩家空闲超时 (分钟):" 10 50 "$current_player_idle_timeout" 2>&1 >/dev/tty)
+                if [[ "$new_pit" =~ ^[0-9]+$ ]]; then
+                    sed -i "s/^player-idle-timeout=.*/player-idle-timeout=${new_pit}/" "${instance_dir}/server.properties"
+                else
+                    dialog --msgbox "无效的超时值！" 8 40
+                fi
+                ;;
+                
+            "back") return ;;
+        esac
+    done
+}
+
 # 管理员设置
 ops_settings() {
     local instance=$1
     local instance_dir="${VERSIONS_DIR}/${instance}"
+    
+    # Bedrock服务器特殊处理
+    if [[ "$instance" == *"Bedrock"* ]]; then
+        bedrock_ops_settings "$instance"
+        return
+    fi
     
     while true; do
         # 获取当前OP列表
@@ -440,17 +688,80 @@ ops_settings() {
     done
 }
 
+# Bedrock管理员设置
+bedrock_ops_settings() {
+    local instance=$1
+    local instance_dir="${VERSIONS_DIR}/${instance}"
+    
+    while true; do
+        # 获取当前权限列表
+        local permissions=($(grep -v "^#" "${instance_dir}/permissions.json" 2>/dev/null | jq -r '.[].name' 2>/dev/null || echo "无"))
+        
+        # 对话框
+        local choice=$(dialog --menu "Bedrock权限设置 - ${instance}" 18 60 12 \
+            "add" "添加权限" \
+            "remove" "移除权限" \
+            "list" "查看权限列表" \
+            "back" "返回" 2>&1 >/dev/tty)
+        
+        [ -z "$choice" ] && return
+        
+        case "$choice" in
+            "add")
+                local player=$(dialog --inputbox "输入要设置权限的玩家名:" 10 50 2>&1 >/dev/tty)
+                if [ -n "$player" ]; then
+                    local perm_level=$(dialog --menu "选择权限等级" 12 50 3 \
+                        "member" "普通成员" \
+                        "operator" "操作员" \
+                        "custom" "自定义" 2>&1 >/dev/tty)
+                    
+                    if [ -n "$perm_level" ]; then
+                        echo "permission set $player $perm_level" > "${instance_dir}/command_input"
+                        dialog --msgbox "已设置 ${player} 的权限等级为 ${perm_level}" 8 40
+                    fi
+                fi
+                ;;
+                
+            "remove")
+                if [ ${#permissions[@]} -eq 0 ]; then
+                    dialog --msgbox "权限列表为空！" 8 40
+                    continue
+                fi
+                
+                local player=$(dialog --menu "选择要移除权限的玩家" 15 60 8 \
+                    $(for p in "${permissions[@]}"; do echo "$p" ""; done) 2>&1 >/dev/tty)
+                if [ -n "$player" ]; then
+                    echo "permission remove $player" > "${instance_dir}/command_input"
+                    dialog --msgbox "已移除 ${player} 的权限" 8 40
+                fi
+                ;;
+                
+            "list")
+                dialog --msgbox "权限列表:\n\n${permissions[*]}" 12 60
+                ;;
+                
+            "back") return ;;
+        esac
+    done
+}
+
 # JVM参数配置
 jvm_settings() {
     local instance=$1
     local instance_dir="${VERSIONS_DIR}/${instance}"
+    
+    # Bedrock服务器不需要JVM设置
+    if [[ "$instance" == *"Bedrock"* ]]; then
+        dialog --msgbox "Bedrock服务器不使用JVM参数" 8 40
+        return
+    fi
     
     while true; do
         # 获取当前JVM参数
         local current_args=$(grep "^JAVA_ARGS=" "${instance_dir}/start.sh" | cut -d= -f2- | sed "s/\"//g")
         
         # 对话框
-        local choice=$(dialog --menu "JVM参数配置 - ${instance}" 18 70 12 \
+        local choice=$(dialog --menu "JVM参数配置 - ${instance}" 15 70 12 \
             "edit" "编辑JVM参数 (当前: ${current_args:0:30}...)" \
             "preset" "预设配置" \
             "back" "返回" 2>&1 >/dev/tty)
@@ -493,69 +804,77 @@ jvm_settings() {
                     "large")
                         local new_args="-Xms6G -Xmx8G -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=150"
                         new_args="${new_args} -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch"
-new_args=" {new_args} -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:G1MixedGCLiveThresholdPercent=90"
-new_args=" {new_args} -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem"
-new_args=" {new_args} -XX:MaxTenuringThreshold=1 -XX:G1NewSizePercent=40 -XX:G1MaxNewSizePercent=50"
-new_args=" {new_args} -XX:InitiatingHeapOccupancyPercent=15 -XX:G1HeapRegionSize=16M -XX:G1ReservePercent=15"
-new_args=" {new_args} -Dusing.aikars.flags=https://mcflags.emc.gs"
-               sed -i "s|^JAVA_ARGS=.*|JAVA_ARGS=\"${new_args}\"|" "${instance_dir}/start.sh"
-;;
-esac
+                        new_args="${new_args} -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:G1MixedGCLiveThresholdPercent=90"
+                        new_args="${new_args} -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem"
+                        new_args="${new_args} -XX:MaxTenuringThreshold=1 -XX:G1NewSizePercent=40 -XX:G1MaxNewSizePercent=50"
+                        new_args="${new_args} -XX:InitiatingHeapOccupancyPercent=15 -XX:G1HeapRegionSize=16M -XX:G1ReservePercent=15"
+                        new_args="${new_args} -Dusing.aikars.flags=https://mcflags.emc.gs"
+                        sed -i "s|^JAVA_ARGS=.*|JAVA_ARGS=\"${new_args}\"|" "${instance_dir}/start.sh"
+                        ;;
+                esac
 
-            if [ -n "$preset" ]; then
-                dialog --msgbox "已应用 ${preset} JVM预设" 8 40
-            fi
-            ;;
-            
-        "back") return ;;
-    esac
-done
-
+                if [ -n "$preset" ]; then
+                    dialog --msgbox "已应用 ${preset} JVM预设" 8 40
+                fi
+                ;;
+                
+            "back") return ;;
+        esac
+    done
 }
 
-#获取实例版本
-
+# 获取实例版本
 get_instance_version() {
-local instance="$1"
-local instance_dir="${VERSIONS_DIR}/${instance}"
-
-if [ -f "${instance_dir}/instance.cfg" ]; then
-    source "${instance_dir}/instance.cfg"
-    echo "$mc_version"
-else
-    echo "未知"
-fi
-
-}
-
-#获取服务器端口
-
-get_server_port() {
-local instance="$1"
-local instance_dir="${VERSIONS_DIR}/${instance}"
-
-if [ -f "${instance_dir}/server.properties" ]; then
-    grep "^server-port=" "${instance_dir}/server.properties" | cut -d= -f2
-else
-    echo "25565"
-fi
-
-}
-
-#检查服务器运行状态
-
-check_server_status() {
-    local instance="$1"  
-    if pgrep -f "java -jar ${VERSIONS_DIR}/${instance}/server.jar" >/dev/null; then
-        return 0  # 运行中
+    local instance="$1"
+    local instance_dir="${VERSIONS_DIR}/${instance}"
+    
+    if [ -f "${instance_dir}/instance.cfg" ]; then
+        source "${instance_dir}/instance.cfg"
+        echo "$mc_version"
     else
-        return 1  # 已停止
+        echo "未知"
     fi
 }
 
+# 获取服务器端口
+get_server_port() {
+    local instance="$1"
+    local instance_dir="${VERSIONS_DIR}/${instance}"
+    
+    if [[ "$instance" == *"Bedrock"* ]]; then
+        if [ -f "${instance_dir}/server.properties" ]; then
+            grep "^server-port=" "${instance_dir}/server.properties" | cut -d= -f2 || echo "19132"
+        else
+            echo "19132"
+        fi
+    else
+        if [ -f "${instance_dir}/server.properties" ]; then
+            grep "^server-port=" "${instance_dir}/server.properties" | cut -d= -f2 || echo "25565"
+        else
+            echo "25565"
+        fi
+    fi
+}
 
-#获取实例列表
+# 检查服务器运行状态
+check_server_status() {
+    local instance="$1"  
+    if [[ "$instance" == *"Bedrock"* ]]; then
+        if pgrep -f "bedrock_server" >/dev/null; then
+            return 0
+        else
+            return 1
+        fi
+    fi
+    
+    if pgrep -f "java -jar ${VERSIONS_DIR}/${instance}/server.jar" >/dev/null; then
+        return 0
+    else
+        return 1
+    fi
+}
 
+# 获取实例列表
 get_instance_list() {
     # 确保变量已加载
     [ -z "${VERSIONS_DIR:-}" ] && VERSIONS_DIR="/root/versions"
@@ -574,11 +893,7 @@ get_instance_list() {
     echo "${instances[@]}"
 }
 
-
-#主入口
-
-if [[ " {BASH_SOURCE[0]}" == " {0}" ]]; then
-config_menu
+# 主入口
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    config_menu
 fi
-
-

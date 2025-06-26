@@ -55,6 +55,7 @@ install_plugins() {
     # 确定插件目录
     local install_dir="${instance_path}/plugins"
     [ "$core_type" = "Fabric" ] && install_dir="${instance_path}/mods"
+    [ "$core_type" = "Forge" ] && install_dir="${instance_path}/mods"
     mkdir -p "$install_dir" || {
         dialog --msgbox "无法创建插件目录：$install_dir" 10 50
         return 1
@@ -119,7 +120,16 @@ install_plugins() {
             "World"*)              desc="世界管理" ;;
             *)                     desc="功能插件" ;;
         esac
-        plugin_choices+=("$plugin" "$desc" off)
+        
+        # 检查插件是否兼容当前服务器类型
+        local compatible=1
+        if [[ "$core_type" == "Fabric" || "$core_type" == "Forge" ]]; then
+            [[ "$plugin" == "Geyser" || "$plugin" == "Floodgate" ]] && compatible=0
+        fi
+        
+        if [ $compatible -eq 1 ]; then
+            plugin_choices+=("$plugin" "$desc" off)
+        fi
     done
 
     # 插件选择对话框
@@ -201,7 +211,7 @@ install_plugins() {
             # 记录安装信息
             log_plugin_install "$plugin" "$source_url" "$install_dir"
         else
-            echo -e "${RED}✖✖ 所有下载源均失败！${NC}"
+            echo -e "${RED}✖✖✖✖ 所有下载源均失败！${NC}"
             echo -e "请手动下载: ${plugin_sources[$plugin]// / 或 }"
         fi
     done
@@ -282,6 +292,7 @@ manage_plugins() {
     # 确定插件目录
     local plugins_dir="${instance_path}/plugins"
     [ "$core_type" = "Fabric" ] && plugins_dir="${instance_path}/mods"
+    [ "$core_type" = "Forge" ] && plugins_dir="${instance_path}/mods"
     
     if [ ! -d "$plugins_dir" ]; then
         dialog --msgbox "该实例没有插件目录！" 8 40
@@ -292,9 +303,10 @@ manage_plugins() {
     local plugins=()
     while IFS= read -r -d $'\0' file; do
         local plugin_name=$(basename "$file" .jar)
+        plugin_name=${plugin_name%.disabled}  # 移除.disabled后缀
         local plugin_size=$(du -h "$file" | cut -f1)
         plugins+=("$plugin_name" "$plugin_size" off)
-    done < <(find "$plugins_dir" -maxdepth 1 -type f -name "*.jar" -print0)
+    done < <(find "$plugins_dir" -maxdepth 1 -type f \( -name "*.jar" -o -name "*.jar.disabled" \) -print0)
 
     if [ ${#plugins[@]} -eq 0 ]; then
         dialog --msgbox "没有找到已安装的插件！" 8 40
@@ -303,7 +315,7 @@ manage_plugins() {
 
     # 插件管理菜单
     while true; do
-        local action=$(dialog --menu "插件管理 - ${selected_instance}" 20 70 15 \
+        local action=$(dialog --menu "管理插件 - ${selected_instance}" 20 70 15 \
             "list" "查看插件列表" \
             "remove" "删除插件" \
             "disable" "禁用插件" \
@@ -460,10 +472,10 @@ plugin_info() {
     info+="修改时间: $(stat -c %y "${plugins_dir}/${selected}.jar" 2>/dev/null || stat -c %y "${plugins_dir}/${selected}.jar.disabled" | cut -d' ' -f1)\n"
     
     # 尝试从jar文件中提取插件信息
-    if [ -f "${plugins_dir}/${selected}.jar" ] || [ -f "${plugins_dir}/${selected}.jar.disabled" ]; then
-        local jar_file="${plugins_dir}/${selected}.jar"
-        [ -f "${jar_file}.disabled" ] && jar_file="${jar_file}.disabled"
-        
+    local jar_file="${plugins_dir}/${selected}.jar"
+    [ -f "${jar_file}.disabled" ] && jar_file="${jar_file}.disabled"
+    
+    if [ -f "$jar_file" ]; then
         # 使用unzip和java读取插件信息
         if unzip -p "$jar_file" plugin.yml 2>/dev/null > /tmp/plugin_meta; then
             info+="\n插件元数据:\n"
@@ -513,6 +525,7 @@ update_plugins() {
     # 确定插件目录
     local plugins_dir="${instance_path}/plugins"
     [ "$core_type" = "Fabric" ] && plugins_dir="${instance_path}/mods"
+    [ "$core_type" = "Forge" ] && plugins_dir="${instance_path}/mods"
     
     if [ ! -d "$plugins_dir" ]; then
         dialog --msgbox "该实例没有插件目录！" 8 40
@@ -555,37 +568,31 @@ check_server_status() {
     fi
 }
 
-
-#重启服务器实例
-
+# 重启服务器实例
 restart_instance() {
-local instance="$1"
-local instance_dir=" {VERSIONS_DIR}/${instance}"
+    local instance="$1"
+    local instance_dir="${VERSIONS_DIR}/${instance}"
 
-if check_server_status "$instance"; then
-    # 停止服务器
-    echo "stop" > "${instance_dir}/command_input"
-    sleep 5
-    
-    # 确保服务器已停止
     if check_server_status "$instance"; then
-        pkill -f "java -jar ${instance_dir}/server.jar"
-        sleep 2
+        # 停止服务器
+        echo "stop" > "${instance_dir}/command_input"
+        sleep 5
+        
+        # 确保服务器已停止
+        if check_server_status "$instance"; then
+            pkill -f "java -jar ${instance_dir}/server.jar"
+            sleep 2
+        fi
     fi
-fi
 
-# 启动服务器
-(
-    cd "${instance_dir}" || exit 1
-    bash start.sh
-)
-
+    # 启动服务器
+    (
+        cd "${instance_dir}" || exit 1
+        bash start.sh
+    )
 }
 
-#主入口
-
-if [[ " {BASH_SOURCE[0]}" == " {0}" ]]; then
-plugins_menu
+# 主入口
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    plugins_menu
 fi
-
-

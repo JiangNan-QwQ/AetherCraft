@@ -4,7 +4,6 @@
 # 版本: 3.3
 # 日期: 2025-06-25
 
-
 # 确保使用UTF-8编码
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
@@ -31,8 +30,6 @@ VERSIONS_DIR="${ROOT_DIR}/versions"
 BACKUP_DIR="${ROOT_DIR}/backups"
 TEMP_DIR="${ROOT_DIR}/temp"
 LOG_DIR="${ROOT_DIR}/logs"
-
-
 
 # 系统信息
 OS_INFO=$(grep PRETTY_NAME /etc/os-release 2>/dev/null | cut -d= -f2 | tr -d '"' || cat /etc/redhat-release 2>/dev/null || echo "未知系统")
@@ -102,6 +99,12 @@ check_deps() {
 check_java() {
     echo -e "${BLUE}正在检查Java环境...${NC}"
     
+    # Bedrock服务器不需要Java
+    if [[ "$1" == *"Bedrock"* ]]; then
+        echo -e "${GREEN}Bedrock服务器不需要Java${NC}"
+        return 0
+    fi
+
     if ! command -v java &> /dev/null; then
         echo -e "${YELLOW}Java未安装，正在自动安装Java ${JAVA_REQUIRED}...${NC}"
         install_java_21
@@ -286,8 +289,19 @@ show_progress() {
 
 # 检查服务器运行状态
 check_server_status() {
-    local instance_name="$1"
-    if pgrep -f "java -jar ${VERSIONS_DIR}/${instance_name}/server.jar" >/dev/null; then
+    local instance="$1"
+    
+    # Bedrock服务器检查
+    if [[ "$instance" == *"Bedrock"* ]]; then
+        if pgrep -f "bedrock_server" >/dev/null; then
+            return 0  # 运行中
+        else
+            return 1  # 已停止
+        fi
+    fi
+    
+    # Java服务器检查
+    if pgrep -f "java -jar ${VERSIONS_DIR}/${instance}/server.jar" >/dev/null; then
         return 0  # 运行中
     else
         return 1  # 已停止
@@ -296,10 +310,20 @@ check_server_status() {
 
 # 获取实例列表
 get_instance_list() {
+    # 确保变量已加载
+    [ -z "${VERSIONS_DIR:-}" ] && VERSIONS_DIR="/root/versions"
+    
+    # 检查目录是否存在
+    if [ ! -d "$VERSIONS_DIR" ]; then
+        log "错误: 目录 $VERSIONS_DIR 不存在" "ERROR"
+        return 1
+    fi
+
     local instances=()
     while IFS= read -r -d $'\0' dir; do
         instances+=("$(basename "$dir")")
-    done < <(find "$VERSIONS_DIR" -maxdepth 1 -type d -name "*" -print0)
+    done < <(find "$VERSIONS_DIR" -maxdepth 1 -type d -name "*" -print0 2>/dev/null)
+
     echo "${instances[@]}"
 }
 
@@ -319,3 +343,113 @@ cleanup_temp() {
 
 # 脚本退出时的清理
 trap cleanup_temp EXIT
+
+# 检查端口是否可用
+check_port_available() {
+    local port=$1
+    ! (ss -tuln | grep -q ":${port} ")
+}
+
+# 获取服务器端口
+get_server_port() {
+    local instance="$1"
+    local instance_dir="${VERSIONS_DIR}/${instance}"
+    
+    # Bedrock服务器默认端口
+    if [[ "$instance" == *"Bedrock"* ]]; then
+        if [ -f "${instance_dir}/server.properties" ]; then
+            grep "^server-port=" "${instance_dir}/server.properties" | cut -d= -f2 || echo "19132"
+        else
+            echo "19132"
+        fi
+    else
+        # Java服务器默认端口
+        if [ -f "${instance_dir}/server.properties" ]; then
+            grep "^server-port=" "${instance_dir}/server.properties" | cut -d= -f2 || echo "25565"
+        else
+            echo "25565"
+        fi
+    fi
+}
+
+# 获取实例版本
+get_instance_version() {
+    local instance="$1"
+    local instance_dir="${VERSIONS_DIR}/${instance}"
+    
+    if [ -f "${instance_dir}/instance.cfg" ]; then
+        source "${instance_dir}/instance.cfg"
+        echo "$mc_version"
+    else
+        echo "未知"
+    fi
+}
+
+# 停止服务器实例
+stop_instance() {
+    local instance="$1"
+    local instance_dir="${VERSIONS_DIR}/${instance}"
+    
+    # Bedrock服务器特殊处理
+    if [[ "$instance" == *"Bedrock"* ]]; then
+        pkill -f "bedrock_server"
+        sleep 3
+        if pgrep -f "bedrock_server"; then
+            return 1
+        else
+            return 0
+        fi
+    fi
+    
+    # Java服务器处理
+    if ! check_server_status "$instance"; then
+        return 0
+    fi
+    
+    # 发送停止命令
+    echo "stop" > "${instance_dir}/command_input"
+    
+    # 等待最多10秒
+    local timeout=10
+    while [ $timeout -gt 0 ]; do
+        if ! check_server_status "$instance"; then
+            return 0
+        fi
+        sleep 1
+        ((timeout--))
+    done
+    
+    # 如果仍然运行，强制终止
+    if check_server_status "$instance"; then
+        pkill -f "java -jar ${instance_dir}/server.jar"
+        sleep 2
+        if check_server_status "$instance"; then
+            return 1
+        fi
+    fi
+    
+    return 0
+}
+
+# 重启服务器实例
+restart_instance() {
+    local instance="$1"
+    
+    if check_server_status "$instance"; then
+        stop_instance "$instance" || return 1
+    fi
+    
+    # 启动服务器
+    (
+        cd "${VERSIONS_DIR}/${instance}" || exit 1
+        
+        # Bedrock服务器特殊处理
+        if [[ "$instance" == *"Bedrock"* ]]; then
+            nohup ./bedrock_server &
+        else
+            bash start.sh
+        fi
+    )
+    
+    return $?
+}

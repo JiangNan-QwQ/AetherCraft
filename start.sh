@@ -22,16 +22,22 @@ start_menu() {
         local menu_items=()
         for instance in "${instances[@]}"; do
             local status="已停止"
-            local color=""
+            local color="${RED}"
+            local version="未知"
             
             if check_server_status "$instance"; then
                 status="运行中"
                 color="${GREEN}"
-            else
-                color="${RED}"
             fi
             
-            menu_items+=("$instance" "${color}${status}${NC} | 版本: $(get_instance_version "$instance")")
+            # 获取版本信息
+            local instance_dir="${VERSIONS_DIR}/${instance}"
+            if [ -f "${instance_dir}/instance.cfg" ]; then
+                source "${instance_dir}/instance.cfg"
+                version="$mc_version"
+            fi
+            
+            menu_items+=("$instance" "${color}${status}${NC} | 版本: $version")
         done
 
         local choice=$(dialog --menu "选择要启动的实例" 20 70 15 \
@@ -66,8 +72,8 @@ instance_control() {
         options+=("command" "发送命令")
     else
         options+=("start" "启动服务器")
-        options+=("edit" "编辑配置")
     fi
+    options+=("edit" "编辑配置")
     options+=("back" "返回上级菜单")
 
     while true; do
@@ -94,9 +100,16 @@ start_instance() {
     local instance_dir="${VERSIONS_DIR}/${instance}"
     
     # 验证实例目录
-    if [ ! -f "${instance_dir}/server.jar" ]; then
-        dialog --msgbox "server.jar 文件缺失！" 10 50
-        return 1
+    if [[ "$instance" == *"Bedrock"* ]]; then
+        if [ ! -f "${instance_dir}/bedrock_server" ]; then
+            dialog --msgbox "bedrock_server 文件缺失！" 10 50
+            return 1
+        fi
+    else
+        if [ ! -f "${instance_dir}/server.jar" ]; then
+            dialog --msgbox "server.jar 文件缺失！" 10 50
+            return 1
+        fi
     fi
 
     # 检查是否已运行
@@ -122,7 +135,13 @@ start_instance() {
         # 启动服务器
         clear
         echo -e "${GREEN}=== 服务器控制台 (直接输入命令) ===${NC}"
-        bash start.sh
+        
+        # Bedrock服务器特殊处理
+        if [[ "$instance" == *"Bedrock"* ]]; then
+            ./bedrock_server
+        else
+            bash start.sh
+        fi
         
         # 检查启动结果
         if [ $? -ne 0 ]; then
@@ -141,6 +160,19 @@ stop_instance() {
     if ! check_server_status "$instance"; then
         dialog --msgbox "服务器未在运行！" 8 40
         return 0
+    fi
+
+    # Bedrock服务器特殊处理
+    if [[ "$instance" == *"Bedrock"* ]]; then
+        pkill -f "bedrock_server"
+        sleep 3
+        if check_server_status "$instance"; then
+            dialog --msgbox "无法停止Bedrock服务器！" 8 40
+            return 1
+        else
+            dialog --msgbox "Bedrock服务器已停止" 8 40
+            return 0
+        fi
     fi
 
     # 发送停止命令
@@ -187,7 +219,13 @@ show_console() {
     # 直接显示控制台输出
     clear
     echo -e "${GREEN}=== 服务器控制台 (输入Ctrl+C返回) ===${NC}"
-    tail -f "${VERSIONS_DIR}/${instance}/logs/latest.log"
+    
+    # Bedrock服务器特殊处理
+    if [[ "$instance" == *"Bedrock"* ]]; then
+        tail -f "${VERSIONS_DIR}/${instance}/logs/*.log"
+    else
+        tail -f "${VERSIONS_DIR}/${instance}/logs/latest.log"
+    fi
 }
 
 # 发送命令到服务器
@@ -196,6 +234,12 @@ send_command() {
     
     if ! check_server_status "$instance"; then
         dialog --msgbox "服务器未在运行！" 8 40
+        return 1
+    fi
+    
+    # Bedrock服务器不支持命令输入
+    if [[ "$instance" == *"Bedrock"* ]]; then
+        dialog --msgbox "Bedrock服务器不支持通过此方式发送命令" 8 50
         return 1
     fi
     
@@ -212,9 +256,18 @@ edit_configs() {
     local instance_dir="${VERSIONS_DIR}/${instance}"
     
     # 配置文件列表
-    local config_files=("server.properties" "spigot.yml" "bukkit.yml" "start.sh" "instance.cfg")
-    if grep -q "Fabric" <<< "$instance"; then
-        config_files+=("fabric-server-launcher.properties")
+    local config_files=()
+    
+    # 根据服务器类型添加特定配置文件
+    if [[ "$instance" == *"Bedrock"* ]]; then
+        config_files=("server.properties")
+    else
+        config_files=("server.properties" "spigot.yml" "bukkit.yml" "start.sh" "instance.cfg")
+        if [[ "$instance" == *"Fabric"* ]]; then
+            config_files+=("fabric-server-launcher.properties")
+        elif [[ "$instance" == *"Forge"* ]]; then
+            config_files+=("forge-installer.jar.log")
+        fi
     fi
     
     # 生成可编辑文件列表
@@ -262,10 +315,18 @@ get_server_port() {
     local instance=$1
     local instance_dir="${VERSIONS_DIR}/${instance}"
     
-    if [ -f "${instance_dir}/server.properties" ]; then
-        grep "^server-port=" "${instance_dir}/server.properties" | cut -d= -f2
+    if [[ "$instance" == *"Bedrock"* ]]; then
+        if [ -f "${instance_dir}/server.properties" ]; then
+            grep "^server-port=" "${instance_dir}/server.properties" | cut -d= -f2
+        else
+            echo "19132"
+        fi
     else
-        echo "25565"
+        if [ -f "${instance_dir}/server.properties" ]; then
+            grep "^server-port=" "${instance_dir}/server.properties" | cut -d= -f2
+        else
+            echo "25565"
+        fi
     fi
 }
 
@@ -278,10 +339,21 @@ check_port_available() {
 # 检查服务器运行状态
 check_server_status() {
     local instance=$1
+    
+    # Bedrock服务器检查
+    if [[ "$instance" == *"Bedrock"* ]]; then
+        if pgrep -f "bedrock_server" >/dev/null; then
+            return 0
+        else
+            return 1
+        fi
+    fi
+    
+    # Java服务器检查
     if pgrep -f "java -jar ${VERSIONS_DIR}/${instance}/server.jar" >/dev/null; then
-        return 0  # 运行中
+        return 0
     else
-        return 1  # 已停止
+        return 1
     fi
 }
 
