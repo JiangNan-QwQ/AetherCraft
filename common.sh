@@ -1,8 +1,8 @@
 #!/bin/bash
-# Minecraft服务器管理脚本 - 公共库
+# AetherCraft - 公共库
 # 作者: B站@爱做视频のJack_Eason
-# 版本: 3.3
-# 日期: 2025-06-25
+# 版本: 3.4
+# 日期: 2025-06-29
 
 # 确保使用UTF-8编码
 export LANG=en_US.UTF-8
@@ -213,7 +213,7 @@ show_banner() {
     else
         echo -e "${GREEN_BOLD}=== Aether Craft ===${NC}"
     fi
-    echo -e "版本: 3.3 | 作者: B站@爱做视频のJack_Eason"
+    echo -e "版本: 3.4 | 作者: B站@爱做视频のJack_Eason"
     echo -e "系统: ${OS_INFO} | 内核: ${KERNEL_INFO}"
     echo -e "===================================="
     sleep 3

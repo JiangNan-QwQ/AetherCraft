@@ -1,8 +1,8 @@
 #!/bin/bash
-# Minecraft服务器管理脚本 - 安装模块
+# AetherCraft - 安装模块
 # 作者: B站@爱做视频のJack_Eason
-# 版本: 3.3
-# 日期: 2025-06-25
+# 版本: 3.4
+# 日期: 2025-06-29
 
 # 加载公共库
 source <(curl -s https://raw.githubusercontent.com/JiangNan-QwQ/AetherCraft/main/common.sh)
@@ -111,6 +111,7 @@ stop_instance() {
 }
 
 # 安装核心服务器
+
 install_core() {
     # 创建版本隔离目录
     mkdir -p "$VERSIONS_DIR" || {
@@ -166,12 +167,8 @@ install_core() {
             }
             ;;
         "Forge")
-            log "正在获取Forge版本列表..." "INFO"
-            versions=($(curl -fsSL "https://files.minecraftforge.net/net/minecraftforge/forge/maven-metadata.json" | \
-                      jq -r '.versioning.versions[]' | grep -Eo '[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -Vr | uniq | head -n 10)) || {
-                dialog --msgbox "无法获取Forge版本信息" 10 50
-                return 1
-            }
+            # Forge 版本由用户直接输入，不列出最新版本
+            versions=("点我")  
             ;;
         "Vanilla")
             log "正在获取Vanilla版本列表..." "INFO"
@@ -207,12 +204,6 @@ install_core() {
         # 自定义版本输入
         selected_version=$(dialog --inputbox "请输入要安装的${core_name}版本号\n(例如: 1.20.1)" 10 50 2>&1 >/dev/tty) || return 0
         
-        # 验证版本号格式
-        if ! validate_version "$selected_version"; then
-            dialog --msgbox "无效的版本号格式！请使用类似 1.20.1 的格式" 10 50
-            return 1
-        fi
-        
         # 检查版本是否存在
         case $core_name in
             "Fabric")
@@ -230,12 +221,6 @@ install_core() {
             "Paper")
                 if ! curl -fsSL "https://papermc.io/api/v2/projects/paper" | jq -r '.versions[]' | grep -q "^${selected_version}$"; then
                     dialog --msgbox "错误：Paper ${selected_version} 版本不存在！" 10 50
-                    return 1
-                fi
-                ;;
-            "Forge")
-                if ! curl -fsSL "https://files.minecraftforge.net/net/minecraftforge/forge/maven-metadata.json" | jq -r '.versioning.versions[]' | grep -qE "${selected_version//./\\.}"; then
-                    dialog --msgbox "错误：Forge ${selected_version} 版本不存在！" 10 50
                     return 1
                 fi
                 ;;
@@ -263,7 +248,19 @@ install_core() {
         return 1
     fi
 
-    local install_dir="${VERSIONS_DIR}/${core_name}-${selected_version}-${instance_name}"
+    # 修改Forge实例命名逻辑
+    if [[ "$core_name" == "Forge" ]]; then
+        # 让用户输入完整的Forge版本号（格式如：1.20.1-47.1.0）
+        local forge_version=$(dialog --inputbox "输入完整的Forge版本号 (格式: MC版本-Forge版本，例如1.20.1-47.1.0):" 10 50 2>&1 >/dev/tty)
+        [ -z "$forge_version" ] && return 1
+        
+        # 提取MC版本部分用于实例命名
+        local mc_version_part=$(echo "$forge_version" | cut -d'-' -f1)
+        local install_dir="${VERSIONS_DIR}/Forge-${mc_version_part}-${instance_name}"
+    else
+        local install_dir="${VERSIONS_DIR}/${core_name}-${selected_version}-${instance_name}"
+    fi
+
     if [ -d "$install_dir" ]; then
         dialog --yesno "实例目录已存在，是否覆盖？\n${install_dir}" 10 50 || return 0
         rm -rf "$install_dir"
@@ -291,7 +288,7 @@ install_core() {
             }
             ;;
         "Forge")
-            download_forge "$selected_version" "$install_dir" || {
+            download_forge "$forge_version" "$install_dir" || {
                 rm -rf "$install_dir"
                 return 1
             }
@@ -326,6 +323,7 @@ install_core() {
     log "成功安装 ${core_name} ${selected_version} 实例: ${instance_name}" "SUCCESS"
     return 0
 }
+
 
 # 下载Fabric核心
 download_fabric() {
@@ -474,37 +472,36 @@ download_forge() {
     local version=$1
     local install_dir=$2
 
-    log "正在获取Forge ${version}下载链接..." "INFO"
+    log "正在下载 Forge 服务端..." "INFO"
     
-    # 获取Forge版本信息
-    local forge_versions=$(curl -fsSL "https://files.minecraftforge.net/net/minecraftforge/forge/maven-metadata.json")
-    local forge_version=$(echo "$forge_versions" | jq -r ".versioning.versions[] | select(startswith(\"${version}-\"))" | sort -Vr | head -1)
-    
-    if [ -z "$forge_version" ]; then
-        dialog --msgbox "无法找到Forge ${version}版本" 10 50
-        return 1
-    fi
-    
-    local download_url="https://maven.minecraftforge.net/net/minecraftforge/forge/${forge_version}/forge-${forge_version}-installer.jar"
-    
-    # 下载Forge安装器
+
+
+    # 构建下载URL
+    local filename="forge-${forge_version}"
+    local download_url="https://maven.minecraftforge.net/net/minecraftforge/forge/${forge_version}/${filename}-installer.jar"
+
+    # 下载安装器
+    log "正在下载 Forge 安装器 (${forge_version})..." "INFO"
     if ! wget --show-progress -q -O "${TEMP_DIR}/forge-installer.jar" "$download_url"; then
-        log "Forge安装器下载失败" "ERROR"
+        log "Forge 安装器下载失败" "ERROR"
         return 1
     fi
-    
-    # 运行安装器
+
+    # 安装服务端
+    log "正在安装 Forge 服务端..." "INFO"
     (
-        cd "$install_dir"
+        cd "$install_dir" || exit 1
         java -jar "${TEMP_DIR}/forge-installer.jar" --installServer
         rm -f "${TEMP_DIR}/forge-installer.jar"
+
+        local forge_jar=$(ls "${install_dir}" | grep -E "forge-.*\.jar")
+        if [ -z "$forge_jar" ]; then
+            log "Forge 服务端安装失败" "ERROR"
+            return 1
+        fi
     )
-    
-    # 重命名生成的jar文件
-    local forge_jar=$(ls "${install_dir}" | grep -E "forge-${version}-.*\.jar")
-    mv "${install_dir}/${forge_jar}" "${install_dir}/server.jar"
-    
-    log "Forge ${version} 安装完成" "SUCCESS"
+
+    log "Forge ${forge_version} 安装成功" "SUCCESS"
     return 0
 }
 
@@ -703,94 +700,102 @@ spawn-protection=16
 resource-pack-sha1=
 max-world-size=29999984
 EOF
-    else
-        # 确保关闭正版验证
-        sed -i 's/^online-mode=.*/online-mode=false/' "${install_dir}/server.properties"
-    fi
+else
+# 确保关闭正版验证
+sed -i 's/^online-mode=.*/online-mode=false/' "${install_dir}/server.properties"
+fi
 }
 
-# 生成实例配置文件
-generate_instance_config() {
-    local core_type=$1
-    local version=$2
-    local instance_name=$3
-    local install_dir=$4
-    
-    cat > "${install_dir}/instance.cfg" <<EOF
-# Minecraft实例配置
-# 生成于 $(date)
-core_type=${core_type}
-mc_version=${version}
-instance_name=${instance_name}
-java_version=${JAVA_REQUIRED}
-install_time=$(date +%FT%T%z)
-last_updated=$(date +%FT%T%z)
+#生成实例配置文件
 
-# 启动参数
+generate_instance_config() {
+local core_type= 1
+local version= 2
+local instance_name= 3
+local install_dir= 4
+
+cat > "${install_dir}/instance.cfg" <<EOF
+
+Minecraft实例配置
+
+生成于 $(date)
+
+core_type= {core_type}
+mc_version= {version}
+instance_name= {instance_name}
+java_version= {JAVA_REQUIRED}
+install_time= (date +%FT%T%z)
+last_updated= (date +%FT%T%z)
+
+启动参数
+
 min_ram=2G
 max_ram=4G
 jvm_args="-XX:+UseG1GC -XX:+ParallelRefProcEnabled"
 
-# 网络设置
+网络设置
+
 server_port=25565
 online_mode=false
 max_players=20
 
-# 其他设置
+其他设置
+
 auto_restart=false
 backup_enabled=true
 EOF
 }
 
-# 保存下载信息
+#保存下载信息
+
 save_download_info() {
-    local version=$1
-    local url=$2
-    local source=$3
-    local install_dir=$4
-    
-    cat > "${install_dir}/download_info.json" <<EOF
+local version= 1
+local url= 2
+local source= 3
+local install_dir= 4
+
+cat > "${install_dir}/download_info.json" <<EOF
+
 {
-    "version": "${version}",
-    "source": "${source}",
-    "download_url": "${url}",
-    "download_time": "$(date +%FT%T%z)",
-    "file_size": "$(du -h "${install_dir}/server.jar" | cut -f1)",
-    "sha256": "$(sha256sum "${install_dir}/server.jar" | cut -d' ' -f1)"
+"version": " {version}",
+"source": " {source}",
+"download_url": " {url}",
+"download_time": " (date +%FT%T%z)",
+"file_size": " (du -h " {install_dir}/server.jar" | cut -f1)",
+"sha256": " (sha256sum " {install_dir}/server.jar" | cut -d' ' -f1)"
 }
 EOF
 }
 
-# 列出已安装实例
+#列出已安装实例
+
 list_instances() {
-    local instances=($(get_instance_list))
-    
-    if [ ${#instances[@]} -eq 0 ]; then
-        dialog --msgbox "没有找到已安装的服务器实例" 8 40
-        return
+local instances=($(get_instance_list))
+
+if [ ${#instances[@]} -eq 0 ]; then
+    dialog --msgbox "没有找到已安装的服务器实例" 8 40
+    return
+fi
+
+local instance_info=()
+for instance in "${instances[@]}"; do
+    local install_dir="${VERSIONS_DIR}/${instance}"
+    if [ -f "${install_dir}/instance.cfg" ]; then
+        source "${install_dir}/instance.cfg"
+        instance_info+=("$instance" "版本: $mc_version | 端口: $server_port")
+    else
+        instance_info+=("$instance" "信息缺失")
     fi
-    
-    local instance_info=()
-    for instance in "${instances[@]}"; do
-        local install_dir="${VERSIONS_DIR}/${instance}"
-        if [ -f "${install_dir}/instance.cfg" ]; then
-            source "${install_dir}/instance.cfg"
-            instance_info+=("$instance" "版本: $mc_version | 端口: $server_port")
-        else
-            instance_info+=("$instance" "信息缺失")
-        fi
-    done
-    
-    dialog --menu "已安装的服务器实例" 20 60 12 "${instance_info[@]}" 2>&1 >/dev/tty
+done
+
+dialog --menu "已安装的服务器实例" 20 60 12 "${instance_info[@]}" 2>&1 >/dev/tty
+
 }
 
-# 验证版本号格式
-validate_version() {
-    local version="$1"
-    [[ "$version" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]
-}
 
-# 主入口
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    install_menu
+
+#主入口
+
+if [[ " {BASH_SOURCE[0]}" == " {0}" ]]; then
+install_menu
 fi

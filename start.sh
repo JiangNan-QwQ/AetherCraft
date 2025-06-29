@@ -1,8 +1,8 @@
 #!/bin/bash
-# Minecraft服务器管理脚本 - 启动模块
+# AetherCraft - 启动模块
 # 作者: B站@爱做视频のJack_Eason
-# 版本: 3.3
-# 日期: 2025-06-25
+# 版本: 3.4
+# 日期: 2025-06-29
 
 # 加载公共库
 source <(curl -s https://raw.githubusercontent.com/JiangNan-QwQ/AetherCraft/main/common.sh)
@@ -22,12 +22,12 @@ start_menu() {
         local menu_items=()
         for instance in "${instances[@]}"; do
             local status="已停止"
-            local color="${RED}"
+            
             local version="未知"
             
             if check_server_status "$instance"; then
                 status="运行中"
-                color="${GREEN}"
+                
             fi
             
             # 获取版本信息
@@ -37,7 +37,7 @@ start_menu() {
                 version="$mc_version"
             fi
             
-            menu_items+=("$instance" "${color}${status}${NC} | 版本: $version")
+            menu_items+=("$instance" "${status} | 版本: $version")
         done
 
         local choice=$(dialog --menu "选择要启动的实例" 20 70 15 \
@@ -96,21 +96,26 @@ instance_control() {
 
 # 启动服务器实例
 start_instance() {
-    local instance=$1
-    local instance_dir="${VERSIONS_DIR}/${instance}"
-    
-    # 验证实例目录
-    if [[ "$instance" == *"Bedrock"* ]]; then
+        # 验证实例目录
+if [ ! -f "${instance_dir}/server.jar" ]; then
+            
+  if [[ "$instance" == *"Bedrock"* ]]; then
         if [ ! -f "${instance_dir}/bedrock_server" ]; then
             dialog --msgbox "bedrock_server 文件缺失！" 10 50
             return 1
         fi
-    else
-        if [ ! -f "${instance_dir}/server.jar" ]; then
-            dialog --msgbox "server.jar 文件缺失！" 10 50
+        else
+        if [[ "$instance" == *"Forge"* ]]; then
+        if [ ! -f "${instance_dir}/run.sh" ]; then
+            dialog --msgbox "run.sh 文件缺失！" 10 50
             return 1
         fi
-    fi
+        else
+            dialog --msgbox "server.jar 文件缺失！" 10 50
+            return 1
+            fi
+        fi
+        fi
 
     # 检查是否已运行
     if check_server_status "$instance"; then
@@ -140,8 +145,15 @@ start_instance() {
         if [[ "$instance" == *"Bedrock"* ]]; then
             ./bedrock_server
         else
+                  # forge服务器特殊处理
+        if [[ "$instance" == *"Forge"* ]]; then
+        bash run.sh
+        else
             bash start.sh
         fi
+        fi
+        
+
         
         # 检查启动结果
         if [ $? -ne 0 ]; then

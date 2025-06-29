@@ -1,8 +1,8 @@
 #!/bin/bash
-# Minecraft服务器管理脚本 - 配置模块
+# AetherCraft - 配置模块
 # 作者: B站@爱做视频のJack_Eason
-# 版本: 3.3
-# 日期: 2025-06-25
+# 版本: 3.4
+# 日期: 2025-06-29
 
 # 加载公共库
 source <(curl -s https://raw.githubusercontent.com/JiangNan-QwQ/AetherCraft/main/common.sh)
