@@ -15,8 +15,8 @@ if check_termux; then
     echo "欢迎，即将进入"
     sleep 1
 cd ~
-pkg install -y curl ; bash -c "$(curl -L https://raw.githubusercontent.com/JiangNan-QwQ/AetherCraft/main/容器.sh)"
+pkg install -y curl ; bash -c "$(curl -L https://raw.githubusercontent.com/JiangNan-QwQ/AetherCraft/main/proot.sh)"
 else
     echo "检测到运行环境: 标准Linux系统"
-bash -c "$(curl -L https://raw.githubusercontent.com/JiangNan-QwQ/AetherCraft/main/主菜单.sh)"
+bash -c "$(curl -L https://raw.githubusercontent.com/JiangNan-QwQ/AetherCraft/main/menu.sh)"
    fi
