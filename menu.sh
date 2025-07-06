@@ -63,7 +63,8 @@ main_menu() {
             2) source <(curl -s https://raw.githubusercontent.com/JiangNan-QwQ/AetherCraft/main/start.sh); start_menu ;;
             3) source <(curl -s https://raw.githubusercontent.com/JiangNan-QwQ/AetherCraft/main/config.sh); config_menu ;;
             4) source <(curl -s https://raw.githubusercontent.com/JiangNan-QwQ/AetherCraft/main/backup.sh); backup_menu ;;
-            5) source <(curl -s https://raw.githubusercontent.com/JiangNan-QwQ/AetherCraft/main/plugins.sh); plugins_menu ;;
+            5) pip install requests pyyaml pythondialog || error_exit "Python 依赖安装失败" $?
+   python <(curl -s https://raw.githubusercontent.com/JiangNan-QwQ/AetherCraft/main/plugins.py) ;;
             6) uninstall_system ;;
             7) exit 0 ;;
             *) echo "无效选项";;
