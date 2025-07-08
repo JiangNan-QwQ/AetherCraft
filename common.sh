@@ -42,7 +42,7 @@ MIN_RAM=2048  # 最小内存要求(MB)
 RECOMMEND_RAM=4096 # 推荐内存(MB)
 
 # 必需依赖
-REQUIRED_DEPS=("curl" "jq" "lolcat" "figlet" "dialog" "wget" "tar" "unzip" "screen" "rsync")
+REQUIRED_DEPS=("curl" "jq" "lolcat" "figlet" "dialog" "wget" "tar" "unzip" "screen" "rsync" "python")
 INSTALL_CMD="apt-get install -y"
 
 # 检查并安装依赖
