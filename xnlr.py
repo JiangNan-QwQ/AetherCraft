@@ -5,7 +5,7 @@ import time
 import requests  ###pip install requests
 import datetime
 import common###common.py为公共库
-
+####TODO 检查更新
 
 ###定义path1
 os.chdir(os.path.expanduser('~'))
