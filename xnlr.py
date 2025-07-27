@@ -11,8 +11,6 @@ import common###common.py为公共库
 os.chdir(os.path.expanduser('~'))
 path1=os.getcwd()
 
-dirs=['xnlr/download','xnlr/mc','xnlr/logs']
-
 def timezone():
     time1=-time.timezone // 3600
     return time1 == 8
@@ -30,7 +28,7 @@ def install():
             if pm is not None:
                 pkg=a
                 break
-    deps=("curl","jq","figlet","dialog","wget","tar","unzip","rsync","java")
+    deps=("curl","jq","figlet","dialog","wget","tar","unzip","rsync","java","git")
     for b in deps:
         dep=shutil.which(b)
         if dep is None:
@@ -66,6 +64,7 @@ def main():
                 time.sleep(1.5)
                 install()
                 os.system('touch .xnlr')
+                os.system("git clone https://gitee.com/jiangnan-qwq/aethercraft xnlr")
                 os.chdir("xnlr")
                 os.system("python menu.py")
             else:
@@ -73,6 +72,7 @@ def main():
                 time.sleep(1.5)
                 install()
                 os.system('touch .xnlr')
+                os.system("git clone https://gitee.com/jiangnan-qwq/aethercraft xnlr")
                 os.chdir("xnlr")
                 os.system("python menu.py")
         else:
@@ -80,6 +80,7 @@ def main():
             time.sleep(1.5)
             install()
             os.system('touch .xnlr')
+            os.system("git clone https://github.com/jiangnan-qwq/aethercraft xnlr")
             os.chdir("xnlr")
             os.system("python menu.py")
             
