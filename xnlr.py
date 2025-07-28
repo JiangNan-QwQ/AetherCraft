@@ -12,11 +12,11 @@ os.chdir(os.path.expanduser('~'))
 path1=os.getcwd()
 
 
-def update():
+def update(url):
     os.chdir("xnlr")
     with open("version/version") as file:
         version_now=float(file.read())
-    version_new = float(requests.get("https://dl.gancmcs.top/https://github.com/jiangnan-qwq/aethercraft/raw/main/version/version"))
+    version_new = float(requests.get(f"https://{url}.com/jiangnan-qwq/aethercraft/raw/main/version/version"))
         print(f"{BLUE}======检查更新======{NC}\n当前版本：{YELLOW_BOLD}v{version_now}{NC}\n远程仓库版本：{YELLOW_BOLD}v{version_new}{NC}")
     if version_now<version_new:
         print(f"{BLUE}检查到版本更新！{NC}\n是否安装？[Y/n]")
@@ -90,7 +90,7 @@ def main():
                 install()
                 os.system('touch .xnlr')
                 os.system("git clone https://gitee.com/jiangnan-qwq/aethercraft xnlr")
-                update()
+                update(gitee)
                 os.system("python menu.py")
             else:
                 print('位于中国大陆\n换源请自行搜索相关教程')
@@ -98,7 +98,7 @@ def main():
                 install()
                 os.system('touch .xnlr')
                 os.system("git clone https://gitee.com/jiangnan-qwq/aethercraft xnlr")
-                update()####TODO
+                update(gitee)
                 os.system("python menu.py")
         else:
             print('位于海外，无需换源')
@@ -106,7 +106,7 @@ def main():
             install()
             os.system('touch .xnlr')
             os.system("git clone https://github.com/jiangnan-qwq/aethercraft xnlr")
-            update()
+            update(github)
             os.system("python menu.py")
             
 main()
