@@ -7,9 +7,29 @@ import datetime
 import common###common.py为公共库
 ####TODO 检查更新
 
-###定义path1
+###定义
 os.chdir(os.path.expanduser('~'))
 path1=os.getcwd()
+
+
+def update():
+    os.chdir("xnlr")
+    with open("version/version") as file:
+        version_now=float(file.read())
+    version_new = float(requests.get("https://dl.gancmcs.top/https://github.com/jiangnan-qwq/aethercraft/raw/main/version/version"))
+        print(f"{BLUE}======检查更新======{NC}\n当前版本：{YELLOW_BOLD}v{version_now}{NC}\n远程仓库版本：{YELLOW_BOLD}v{version_new}{NC}")
+    if version_now<version_new:
+        print(f"{BLUE}检查到版本更新！{NC}\n是否安装？[Y/n]")
+        usr_reply=input()
+        if usr_reply in ['Y','y',""]:
+            os.system("git pull")
+            print("更新成功")
+        else:
+            print("取消")
+    elif version_now=version_new:
+        pass
+    else:
+        print(f"{RED_BOLD}错误！无法检查更新！请检查网络连接！{NC}")
 
 def timezone():
     time1=-time.timezone // 3600
@@ -28,7 +48,7 @@ def install():
             if pm is not None:
                 pkg=a
                 break
-    deps=("curl","jq","figlet","dialog","wget","tar","unzip","rsync","java","git")
+    deps=("curl","jq","figlet","dialog","wget","tar","unzip","rsync","java")
     for b in deps:
         dep=shutil.which(b)
         if dep is None:
@@ -53,19 +73,24 @@ def install():
         
 def main():
     if shutil.which("figlet") is None:
+        print("============AetherCraft============")
+    else:
         os.system('figlet "Aether" && figlet "Craft"')
+    
     if os.path.exists('.xnlr'):
+        
         pass
     else:
         print('首次进入！检查地区（通过时区检查，可能不准确）！')
         if timezone():
+            
             if path1=="/data/data/com.termux/files/home":
                 print(f'位于中国大陆，如需换源请执行{BLUE}termux-change-repo{NC}')
                 time.sleep(1.5)
                 install()
                 os.system('touch .xnlr')
                 os.system("git clone https://gitee.com/jiangnan-qwq/aethercraft xnlr")
-                os.chdir("xnlr")
+                update()
                 os.system("python menu.py")
             else:
                 print('位于中国大陆\n换源请自行搜索相关教程')
@@ -73,7 +98,7 @@ def main():
                 install()
                 os.system('touch .xnlr')
                 os.system("git clone https://gitee.com/jiangnan-qwq/aethercraft xnlr")
-                os.chdir("xnlr")
+                update()####TODO
                 os.system("python menu.py")
         else:
             print('位于海外，无需换源')
@@ -81,7 +106,7 @@ def main():
             install()
             os.system('touch .xnlr')
             os.system("git clone https://github.com/jiangnan-qwq/aethercraft xnlr")
-            os.chdir("xnlr")
+            update()
             os.system("python menu.py")
             
 main()
@@ -92,5 +117,3 @@ main()
 
 #TODO
 #####os.system("exit")
-
-#####TODO git clone
