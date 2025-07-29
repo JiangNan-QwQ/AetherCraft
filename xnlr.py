@@ -4,8 +4,6 @@ import pathlib
 import time
 import requests  ###pip install requests
 import datetime
-import common###common.py为公共库
-####TODO 检查更新
 
 ###颜色
 RED='\033[0;31m'
