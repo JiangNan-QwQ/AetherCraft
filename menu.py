@@ -1,5 +1,4 @@
 import dialog####pip install pythondialog
-import common
 import os
 
 x=dialog.Dialog(dialog="dialog")
@@ -20,15 +19,15 @@ def menu():
         if re==x.OK:
             match selection:
                 case "I":
-                    os.system("python install.py")
+                    os.system("python functions/install.py")
                 case "S":
-                    os.system("python start.py")
+                    os.system("python functions/start.py")
                 case "C":
-                    os.system("python config.py")
+                    os.system("python functions/config.py")
                 case "B":
-                    os.system("python backup.py")
+                    os.system("python functions/backup.py")
                 case "U":
-                    os.system("python uninstall.py")
+                    os.system("python functions/uninstall.py")
                 case "E":
                     break
                 case _:
