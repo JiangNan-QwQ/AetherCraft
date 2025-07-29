@@ -1,5 +1,6 @@
 import dialog####pip install pythondialog
 import common
+import os
 
 x=dialog.Dialog(dialog="dialog")
 
@@ -16,7 +17,7 @@ def menu():
                 ("E","退出管理系统")
                      ]
                                  )
-        if re==dialog.OK:
+        if re==x.OK:
             match selection:
                 case "I":
                     os.system("python /function/install.py")
@@ -30,7 +31,10 @@ def menu():
                     os.system("python /function/uninstall.py")
                 case "E":
                     break
-        elif re==dialog.CANCEL:
+                case _:
+                    print(f"{RED}无效选项{NC}")
+                    continue
+        elif re==x.CANCEL:
             continue
         else:
             continue
