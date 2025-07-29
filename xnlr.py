@@ -5,7 +5,6 @@ import time
 import requests  ###pip install requests
 import datetime
 
-###颜色
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
@@ -102,7 +101,7 @@ def main():
     
     if os.path.exists('.xnlr'):
         with open("xnlr/version/update") as updateurl:
-            update_url=updateurl
+            update_url=updateurl.read()
         update(update_url)
         os.system("python menu.py")
     else:

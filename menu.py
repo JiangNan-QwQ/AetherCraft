@@ -20,15 +20,15 @@ def menu():
         if re==x.OK:
             match selection:
                 case "I":
-                    os.system("python /function/install.py")
+                    os.system("python install.py")
                 case "S":
-                    os.system("python /function/start.py")
+                    os.system("python start.py")
                 case "C":
-                    os.system("python /function/config.py")
+                    os.system("python config.py")
                 case "B":
-                    os.system("python /function/backup.py")
+                    os.system("python backup.py")
                 case "U":
-                    os.system("python /function/uninstall.py")
+                    os.system("python uninstall.py")
                 case "E":
                     break
                 case _:
