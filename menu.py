@@ -28,6 +28,8 @@ def menu():
                     os.system("python functions/backup.py")
                 case "U":
                     os.system("python functions/uninstall.py")
+                    print(f"{BLUE}再见，期待与您的再次相遇。\nBy：江南_XnLr{NC}")
+                    break
                 case "E":
                     break
                 case _:
