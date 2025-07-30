@@ -1,3 +1,4 @@
 版本：v4.0
 beta测试版本
 测试内容：Python重写脚本
+许可证信息：见xnlr目录下LICENSE文件
