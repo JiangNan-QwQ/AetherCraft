@@ -1,4 +1,4 @@
-import os
+import os####TODO 修改python3支持Linux
 import shutil
 import pathlib
 import time
@@ -103,6 +103,9 @@ def main():
         with open("xnlr/version/update") as updateurl:
             update_url=updateurl.read()
         update(update_url)
+        with open("notice.txt") as notice:
+            info=notice
+        print(f"=============={BLUE}版本信息{NC}==============\n{info}")
         os.system("python menu.py")
     else:
         print('首次进入！检查地区（通过时区检查，可能不准确）！')
@@ -112,29 +115,28 @@ def main():
                 print(f'位于中国大陆，如需换源请执行{BLUE}termux-change-repo{NC}')
                 time.sleep(1.5)
                 install()
-                os.system('touch .xnlr')
                 os.system("git clone https://gitee.com/jiangnan-qwq/aethercraft xnlr")
                 update("gitee")
-                os.system("touch version/update")
                 write_file("gitee")
+                os.system('touch .xnlr')
                 os.system("python menu.py")
             else:
                 print('位于中国大陆\n换源请自行搜索相关教程')
                 time.sleep(1.5)
                 install()
-                os.system('touch .xnlr')
                 os.system("git clone https://gitee.com/jiangnan-qwq/aethercraft xnlr")
                 update("gitee")
                 write_file("gitee")
+                os.system('touch .xnlr')
                 os.system("python menu.py")
         else:
             print('位于海外，无需换源')
             time.sleep(1.5)
             install()
-            os.system('touch .xnlr')
             os.system("git clone https://github.com/jiangnan-qwq/aethercraft xnlr")
             update("github")
             write_file("github")
+            os.system('touch .xnlr')
             os.system("python menu.py")
             
 main()
