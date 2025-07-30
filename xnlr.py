@@ -1,4 +1,4 @@
-import os####TODO 修改python3支持Linux###TODO 修改install函数支持文件夹存在抓取
+import os####TODO 修改python3支持Linux###TODO 修改install函数支持文件夹存在抓取###TODO 公共库
 import shutil
 import pathlib
 import time
@@ -146,5 +146,5 @@ main()
 ######print(f"{BLUE}开始记录日志信息。日志将在脚本结束后保存。{NC}\n使用下面的命令查看日志\n{YELLOW_BOLD}cat ~xnlr/logs/{now}.log{NC}")
 
 
-#TODO
+#TODO JAVA版本检测
 #####os.system("exit")
