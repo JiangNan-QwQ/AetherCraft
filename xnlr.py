@@ -104,8 +104,9 @@ def main():
             update_url=updateurl.read()
         update(update_url)
         with open("notice.txt") as notice:
-            info=notice
+            info=notice.read()
         print(f"=============={BLUE}版本信息{NC}==============\n{info}")
+        time.sleep(2)
         os.system("python menu.py")
     else:
         print('首次进入！检查地区（通过时区检查，可能不准确）！')
