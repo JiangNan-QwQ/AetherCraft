@@ -1,4 +1,4 @@
-import os####TODO 修改python3支持Linux
+import os####TODO 修改python3支持Linux###TODO 修改install函数支持文件夹存在抓取
 import shutil
 import pathlib
 import time
@@ -119,7 +119,7 @@ def main():
                 os.system("git clone https://gitee.com/jiangnan-qwq/aethercraft xnlr")
                 update("gitee")
                 write_file("gitee")
-                os.system('touch .xnlr')
+                os.system('cd .. && touch .xnlr')
                 os.system("python menu.py")
             else:
                 print('位于中国大陆\n换源请自行搜索相关教程')
@@ -128,7 +128,7 @@ def main():
                 os.system("git clone https://gitee.com/jiangnan-qwq/aethercraft xnlr")
                 update("gitee")
                 write_file("gitee")
-                os.system('touch .xnlr')
+                os.system('cd .. && touch .xnlr')
                 os.system("python menu.py")
         else:
             print('位于海外，无需换源')
@@ -137,7 +137,7 @@ def main():
             os.system("git clone https://github.com/jiangnan-qwq/aethercraft xnlr")
             update("github")
             write_file("github")
-            os.system('touch .xnlr')
+            os.system('cd .. && touch .xnlr')
             os.system("python menu.py")
             
 main()
