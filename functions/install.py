@@ -18,13 +18,27 @@ YELLOW_BOLD='\033[1;33m'
 i=dialog.Dialog(dialog="dialog")
 
 def spigot_install():
+    sv=[]
+    spigot_versions=[]
+    number=0
+    ####TODO 下载buildtools
+    with os.popen(r"curl -fsSL 'https://hub.spigotmc.org/versions/' | grep -Eo '[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -Vr | uniq | head -n 10") as v:
+        while True:
+            version=v.readline()
+            if not version:
+                break
+            spigot_versions.append(version.strip())
+    while number<len(spigot_versions):
+        number+=1
+        sv.append((str(number),spigot_versions[number-1]))
     sr,selection=i.menu(
     "选择版本---Spigot"
-    choices=[
-             ("")
-             ]
+    choices=sv
     )
-
+    if sr==i.OK:
+        last=sv[int(selection)-1][1]
+        os.system(f"cd download && java -jar BuildTools.jar --rev {last}")
+        ###TODO 后续操作
 def core_menu():
     while True:
         cr,selection=i.menu(
