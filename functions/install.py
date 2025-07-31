@@ -38,8 +38,12 @@ def spigot_install():
     )
     if sr==i.OK:
         last=sv[int(selection)-1][1]
-        os.system(f"mkdir download/spigot-{last}-build && wget https://hub.spigotmc.org/jenkins/job/BuildTools/BuildTools.jar download/spigot-{last}-build && java -jar BuildTools.jar --rev {last} && mkdir mcserver/spigot-{last}-{server_name} && mv download/spigot-{last}-build/spigot-{last}.jar mcserver/spigot-{last}-{server_name}/server.jar")
+        os.system(f"mkdir download/spigot-{last}-build && wget https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar download/spigot-{last}-build && java -jar BuildTools.jar --rev {last} && mkdir mcserver/spigot-{last}-{server_name} && mv download/spigot-{last}-build/spigot-{last}.jar mcserver/spigot-{last}-{server_name}/server.jar")
         print(f"{BLUE}构建完成，build资源存在于download目录，可以自行删除{NC}")
+    elif cr==i.CANDLE:
+        pass
+    else:
+        print(f"{RED_BOLD}无效选项！{NC}")
 def core_menu():
     while True:
         cr,selection=i.menu(
@@ -64,7 +68,7 @@ def core_menu():
                     break
                 case _:
                     print(f"{RED}无效选项！{NC}")
-        elif cr==i.CANDLE
+        elif cr==i.CANDLE:
             break
         else:
             print(f"{RED_BOLD}无效选项！{NC}")
