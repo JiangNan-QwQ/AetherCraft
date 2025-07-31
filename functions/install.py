@@ -17,18 +17,42 @@ YELLOW_BOLD='\033[1;33m'
 
 i=dialog.Dialog(dialog="dialog")
 
+def spigot_install():
+    sr,selection=i.menu(
+    "选择版本---Spigot"
+    choices=[
+             ("")
+             ]
+    )
+
 def core_menu():
     while True:
         cr,selection=i.menu(
         "选择核心",
-        choices=[("S","Spigot"),
+        choices=[
+                 ("S","Spigot"),
                  ("P","Paper"),
                  ("F","Forge(未完成)"),###TODO
+                 ("B","返回")
                  ###TODO 其它核心
                  ]
         )
         if cr==i.OK:
-            
+            match selection:
+                case "S":
+                    spigot_install()
+                case "P":
+                    paper_install()
+                case "F":
+                    forge_install()
+                case "B":
+                    break
+                case _:
+                    print(f"{RED}无效选项！{NC}")
+        elif cr==i.CANDLE
+            break
+        else:
+            print(f"{RED_BOLD}无效选项！{NC}")
 def menu():
     while True:
         re,selection=i.menu(
