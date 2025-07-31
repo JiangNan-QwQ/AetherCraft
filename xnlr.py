@@ -1,4 +1,4 @@
-import os####TODO 修改python3支持Linux###TODO 修改install函数支持文件夹存在抓取###TODO 公共库
+import os####TODO 修改python3支持Linux###TODO 修改install函数支持文件夹存在抓取###TODO 公共库 ###TODO update文件存在检测
 import shutil
 import pathlib
 import time
