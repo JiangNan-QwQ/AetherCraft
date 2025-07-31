@@ -21,7 +21,8 @@ def spigot_install():
     sv=[]
     spigot_versions=[]
     number=0
-    ####TODO 下载buildtools
+    server_name=input(f"{BLUE}请输入服务器名称{NC}(仅支持数字和字母)：")
+    ####TODO 检测服务器名称
     with os.popen(r"curl -fsSL 'https://hub.spigotmc.org/versions/' | grep -Eo '[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -Vr | uniq | head -n 10") as v:
         while True:
             version=v.readline()
@@ -37,8 +38,8 @@ def spigot_install():
     )
     if sr==i.OK:
         last=sv[int(selection)-1][1]
-        os.system(f"cd download && java -jar BuildTools.jar --rev {last}")
-        ###TODO 后续操作
+        os.system(f"mkdir download/spigot-{last}-build && wget https://hub.spigotmc.org/jenkins/job/BuildTools/BuildTools.jar download/spigot-{last}-build && java -jar BuildTools.jar --rev {last} && mkdir mcserver/spigot-{last}-{server_name} && mv download/spigot-{last}-build/spigot-{last}.jar mcserver/spigot-{last}-{server_name}/server.jar")
+        print(f"{BLUE}构建完成，build资源存在于download目录，可以自行删除{NC}")
 def core_menu():
     while True:
         cr,selection=i.menu(
