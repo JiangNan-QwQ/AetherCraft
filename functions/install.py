@@ -1,5 +1,6 @@
 import os
 import dialog
+
 #颜色
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -38,8 +39,7 @@ def spigot_install():
     )
     if sr==i.OK:
         last=sv[int(selection)-1][1]
-        os.system(f"mkdir download/spigot-{last}-build && wget https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar download/spigot-{last}-build && java -jar BuildTools.jar --rev {last} && mkdir mcserver/spigot-{last}-{server_name} && mv download/spigot-{last}-build/spigot-{last}.jar mcserver/spigot-{last}-{server_name}/server.jar")
-        print(f"{BLUE}构建完成，build资源存在于download目录，可以自行删除{NC}")
+        os.system(f"mkdir -p download/spigot-{last}-build && wget https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar -O download/spigot-{last}-build/BuildTools.jar && (cd download/spigot-{last}-build && java -jar BuildTools.jar --rev {last}) && mkdir -p mcserver/spigot-{last}-{server_name} && mv download/spigot-{last}-build/spigot-{last}.jar mcserver/spigot-{last}-{server_name}/server.jar && rm -rfv download/spigot-{last}-build")
     elif cr==i.CANDLE:
         pass
     else:
