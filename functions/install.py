@@ -33,7 +33,7 @@ def spigot_install():
         number+=1
         sv.append((str(number),spigot_versions[number-1]))
     sr,selection=i.menu(
-    "选择版本---Spigot"
+    "选择版本---Spigot",
     choices=sv
     )
     if sr==i.OK:
