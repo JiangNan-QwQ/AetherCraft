@@ -1,3 +1,4 @@
 version/*
 gitee令牌.txt
+.idea/*
 !version/version
