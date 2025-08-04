@@ -7,4 +7,4 @@
 #### 注：~~新版本正在开发中，本仓库暂时无法使用，请到<a href=https://github.com/jiangnan-qwq/acbackup>备份仓库</a>使用~~
 
 <mark>Copyright © <a href=https://b23.tv/JWRdXUU>江南_XnLr</a>. All rights reserved.   
-本项目根据 **[MIT许可证(LICENSE)]** 开源发布。</mark>
+本项目根据 **<a href=https://mitsloan.mit.edu/licensing>[MIT许可证(LICENSE)]</a>** 开源发布。</mark>
