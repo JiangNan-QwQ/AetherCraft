@@ -5,28 +5,28 @@
 - 你可以在<a href=https://github.com/jiangnan-qwq/aethercraft>Github</a>或<a href=https://gitee.com/jiangnan-qwq/aethercraft>Gitee</a>找到这个项目并克隆到 **/xnlr** 目录下并用`python xnlr/xnlr.py`启动脚本，还有一些依赖需要安装，脚本开发完毕后会在官网更新详细教程。
 
 ### 功能    
-1. 核心下载：   
+- 核心下载：   
 - [x] Spigot核心下载   
 - [ ] Paper,Forge等核心下载   
 
-2. 启动服务器   
+- 启动服务器   
 - [ ] 启动服务器   
 
-3. 管理服务器   
+- 管理服务器   
 - [ ] 插件商店   
 - [ ] 插件管理   
 - [ ] 服务器配置修改   
 - [ ] 服务器JAVA参数修改   
 - [ ] 重命名服务器   
 
-4. 备份服务器   
+- 备份服务器   
 - [ ] 完整备份   
 - [ ] 增量备份   
 
-5. 启动服务器   
+- 启动服务器   
 - [ ] 启动服务器   
 
-6. 其他功能   
+- 其他功能   
 - [x] 卸载整个管理系统   
 - [ ] 卸载单个服务器   
 
