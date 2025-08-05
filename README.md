@@ -2,15 +2,17 @@
 ## 官网 https://aether-craft.rf.gd/
 ![AetherCraft](https://aether-craft.rf.gd/aethercraft.png "AetherCraft")   
 ### 如何使用?   
-- 你可以在<a href=https://github.com/jiangnan-qwq/aethercraft>Github</a>或<a href=https://gitee.com/jiangnan-qwq/aethercraft>Gitee</a>找到这个项目并克隆到 **/xnlr** 目录下并用`python xnlr/xnlr.py`启动脚本，还有一些依赖需要安装，脚本开发完毕后会在官网更新详细教程。
+- 你可以在<a href=https://github.com/jiangnan-qwq/aethercraft>Github</a>或<a href=https://gitee.com/jiangnan-qwq/aethercraft>Gitee</a>找到本项目并克隆到 **/xnlr** 目录下并用`python xnlr/xnlr.py`启动脚本，还有一些依赖需要安装，脚本开发完毕后会在官网更新详细教程。
 
 ### 功能    
 - 核心下载：   
 - [x] Spigot核心下载   
 - [ ] Paper,Forge等核心下载   
 
+
 - 启动服务器：   
 - [ ] 启动服务器   
+
 
 - 管理服务器：   
 - [ ] 插件商店   
@@ -19,20 +21,31 @@
 - [ ] 服务器JAVA参数修改   
 - [ ] 重命名服务器   
 
+
 - 备份服务器：   
 - [ ] 完整备份   
 - [ ] 增量备份   
 
+
 - 启动服务器：   
 - [ ] 启动服务器   
+
 
 - 其他功能：   
 - [x] 卸载整个管理系统   
 - [ ] 卸载单个服务器   
 
-**目前脚本在手机Termux进行测试，暂未测试Linux及其适配。**
 
-**注：新版本正在开发中，本仓库暂时无法使用，请到<a href=https://github.com/jiangnan-qwq/acbackup>备份仓库</a>使用。**
+***
+
+**注意：目前脚本在手机Termux进行开发和测试，暂未测试Linux及其适配。**
+
+**<u>新版本正在开发中，本仓库暂时无法使用，请到<a href=https://github.com/jiangnan-qwq/acbackup>备份仓库</a>使用。</u>**
 
 <mark>Copyright © <a href=https://b23.tv/JWRdXUU>江南_XnLr</a>. All rights reserved.   
 本项目根据 [MIT许可证(LICENSE)](https://mitsloan.mit.edu/licensing "MIT许可证（The MIT License）是一种广泛使用的开源软件许可证。它允许开发者自由使用、复制、修改、合并、出版、分发、再许可和销售软件的副本，只需在软件和软件的所有副本中保留原始的版权声明以及该许可证的完整文本。") 开源发布。</mark>
+
+>**什么是MIT LICENSE?**
+>
+> MIT许可证（The MIT License）是许多软件授权条款中，被广泛使用的其中一种。与其他常见的软件授权条款（如GPL、LGPL、BSD）相比，MIT是相对宽松的软件授权条款。   
+> *-----来自：<a href=https://baike.baidu.com/item/MIT%E8%AE%B8%E5%8F%AF%E8%AF%81/6671281>百度百科：MIT许可证</a>*
