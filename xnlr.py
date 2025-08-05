@@ -1,9 +1,9 @@
 import os####TODO 修改python3支持Linux###TODO 修改install函数支持文件夹存在抓取###TODO 公共库 ###TODO update文件存在检测
 import shutil
-import pathlib
+#import pathlib
 import time
 import requests  ###pip install requests
-import datetime
+#import datetime
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -43,7 +43,10 @@ def update(url):
         print(f"{BLUE}检查到版本更新！{NC}\n是否安装？[Y/n]")
         usr_reply=input()
         if usr_reply in ['Y','y',""]:
-            os.system("git pull")
+            try:
+                os.system("git pull")
+            except:
+                print(f'{RED}无法更新！请检查您的网络连接！{NC}')
             print("更新成功")
         else:
             print("取消")

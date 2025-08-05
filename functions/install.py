@@ -1,5 +1,6 @@
 import os
-import dialog
+import dialog  #pip install pythondialog
+import json
 
 #颜色
 RED='\033[0;31m'
@@ -18,23 +19,39 @@ YELLOW_BOLD='\033[1;33m'
 
 i=dialog.Dialog(dialog="dialog")
 
-def spigot_install():
+def forge_install():
+    pass #TODO
+
+def install(core):
     sv=[]
-    spigot_versions=[]
+    versions=[]
     number=0
     server_name=input(f"{BLUE}请输入服务器名称{NC}(仅支持数字和字母)：")
     ####TODO 检测服务器名称
-    with os.popen(r"curl -fsSL 'https://hub.spigotmc.org/versions/' | grep -Eo '[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -Vr | uniq | head -n 10") as v:
-        while True:
-            version=v.readline()
-            if not version:
-                break
-            spigot_versions.append(version.strip())
-    while number<len(spigot_versions):
+    if core=='spigot':
+        with os.popen(r"curl -fsSL 'https://hub.spigotmc.org/versions/' | grep -Eo '[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -Vr | uniq") as v:
+            while True:
+                version = v.readline()
+                if not version:
+                    break
+                versions.append(version.strip())
+    elif core=='paper':
+        pass #TODO
+    elif core=='fabric':
+        with os.popen(r"curl -fsSL 'https://meta.fabricmc.net/v2/versions/game' | sort -Vr | uniq") as v:
+            data=json.load(v)
+            stable_versions=[item['version'] for item in data
+                             if item.get('stable') is True]
+            while True:
+                version = stable_versions.readline()
+                if not version:
+                    break
+                versions.append(version.strip())
+    while number<len(versions):
         number+=1
-        sv.append((str(number),spigot_versions[number-1]))
+        sv.append((str(number),versions[number-1]))
     sr,selection=i.menu(
-    "选择版本---Spigot",
+    "选择版本",
     choices=sv
     )
     if sr==i.OK:
@@ -42,7 +59,7 @@ def spigot_install():
         os.system(f"mkdir -p download/spigot-{last}-build && wget https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar -O download/spigot-{last}-build/BuildTools.jar && (cd download/spigot-{last}-build && java -jar BuildTools.jar --rev {last}) && mkdir -p mcserver/spigot-{last}-{server_name} && mv download/spigot-{last}-build/spigot-{last}.jar mcserver/spigot-{last}-{server_name}/server.jar && touch mcserver/spigot-{last}-{server_name}/eula.txt && rm -rfv download/spigot-{last}-build")
         with open (f"mcserver/spigot-{last}-{server_name}/eula.txt","w",encoding="utf-8") as file:
             file.write("eula=True")
-    elif cr==i.CANDLE:
+    elif sr==i.CANDLE:
         pass
     else:
         print(f"{RED_BOLD}无效选项！{NC}")
@@ -53,6 +70,7 @@ def core_menu():
         choices=[
                  ("S","Spigot"),
                  ("P","Paper"),
+                 ('F','Fabric')
                  ("F","Forge(未完成)"),###TODO
                  ("B","返回")
                  ###TODO 其它核心
@@ -61,9 +79,11 @@ def core_menu():
         if cr==i.OK:
             match selection:
                 case "S":
-                    spigot_install()
+                    install('spigot')
                 case "P":
-                    paper_install()
+                    install('paper')
+                case 'F':
+                    install('fabric')
                 case "F":
                     forge_install()
                 case "B":
