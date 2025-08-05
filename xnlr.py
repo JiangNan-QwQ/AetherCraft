@@ -99,10 +99,22 @@ def main():
     else:
         os.system('figlet "Aether" && figlet "Craft"')
     
-    if os.path.exists('.xnlr'):
+    if os.path.exists('.xnlr') and os.path.exists('xnlr/version/update'):
         with open("xnlr/version/update") as updateurl:
             update_url=updateurl.read()
         update(update_url)
+    elif not os.path.exists('xnlr/version/update'):
+        if timezone():
+            os.system('touch xnlr/version/update')
+            with open('xnlr/version/update','w',encoding="utf-8") as file:
+                file.write("gitee")
+            update("gitee")
+        else:
+            os.system('touch xnlr/version/update')
+            with open('xnlr/version/update','w',encoding="utf-8") as file:
+                file.write("github")
+            update("github")
+        
         with open("notice.txt") as notice:
             info=notice.read()
         print(f"=============={BLUE}版本信息{NC}==============\n{info}")

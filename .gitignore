@@ -1,4 +1,6 @@
 version/*
 gitee令牌.txt
 .idea/
+.*
+!.gitignore
 !version/version
