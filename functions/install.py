@@ -26,8 +26,12 @@ def install(core):
     sv=[]
     versions=[]
     number=0
-    server_name=input(f"{BLUE}请输入服务器名称{NC}(仅支持数字和字母)：")
-    ####TODO 检测服务器名称
+    while True:
+        server_name=input(f"{BLUE}请输入服务器名称{NC}(仅支持数字和字母)：")
+        if server_name.isalnum():
+            break
+        print(f"{RED}无效输入！请输入字母或数字！{NC}")
+        time.sleep(1)
     if core=='spigot':
         with os.popen(r"curl -fsSL 'https://hub.spigotmc.org/versions/' | grep -Eo '[0-9]+\.[0-9]+(\.[0-9]+)?' | sort -Vr | uniq") as v:
             while True:
