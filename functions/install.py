@@ -1,6 +1,7 @@
 import os
 import dialog  #pip install pythondialog
 import json
+import time
 
 #颜色
 RED='\033[0;31m'
