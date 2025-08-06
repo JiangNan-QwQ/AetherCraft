@@ -20,8 +20,9 @@ Copyright (c) 2025 江南_XnLr（即 Gitee & GitHub 平台邮箱 1706491377@qq.c
    (c) 书面承诺按介质成本价提供物理拷贝；
 3. 使补丁及衍生品整体在完全相同的许可条款下授权；
 4. 在所有副本中保留原始版权声明：“Copyright (c) 2025 江南_XnLr”；
-5. 在衍生品的README文件首行及用户文档中添加声明：“本作品基于[原软件名]构建，原软件由江南_XnLr开发（联系邮箱：1706491377@qq.com）。许可证见：[链接]”。
-
+5. 在衍生品的README文件首行及用户文档中添加声明：
+   (a)“本作品基于[原软件名]构建，原软件由江南_XnLr开发（联系邮箱：1706491377@qq.com）。许可证见：[链接]。”
+   (b)上游所有仓库发布者名称及邮箱（如果您不是从原软件仓库获取源代码的话）。
 第三条 关键定义
 1. 衍生品指：
    (a) 包含原软件代码超过5%的作品；
@@ -66,7 +67,9 @@ When you distribute a Patch or Derivative (including but not limited to via down
    (c) Providing a written offer to furnish a physical copy at no more than the cost of the medium;
 3. License the entire Patch or Derivative under this identical license;
 4. Preserve the original copyright notice on all copies: "Copyright (c) 2025 Jiangnan_XnLr";
-5. Add the following declaration to the first line of the README file and user documentation of Derivatives: "This work is based on [Original Software Name] developed by Jiangnan_XnLr (Contact: 1706491377@qq.com). License: [Link]".
+5. Add the following declaration to the first line of the README file and user documentation of Derivatives: 
+   (a)"This work is based on [Original Software Name] developed by Jiangnan_XnLr (Contact: 1706491377@qq.com). License: [Link]."
+   (b)All upstream warehouse publisher names and mailboxes (if you did not get the source code from the original software warehouse).
 
 Article 3 Key Definitions
 1. "Derivative" means:
