@@ -1,31 +1,105 @@
-MIT License
+江南_XnLr 强传染性开源许可证 1.0版
+(Jiangnan_XnLr Strong Copyleft Open Source License v1.0)
 
-Copyright (c) 2025 江南_XnLr
-
+Copyright (c) 2025 江南_XnLr（即 Gitee & GitHub 平台邮箱 1706491377@qq.com 的用户）
 
 中文版本：
-特此免费授予任何获得本软件和相关文档文件（“软件”）副本的人不受限制地处理软件的权限，包括但不限于使用、复制、修改、合并、发布、分发、再许可和/或出售软件副本的权利，并允许软件交付给的人这样做，但须符合以下条件：
 
-上述版权声明和本许可声明应包含在软件的所有副本或实质性部分中。
+第一条 授权授予
+特此免费授予任何获得本软件及相关文档文件（“软件”）副本的个人或实体以下全球性、非独占、不可撤销的许可：
+1. 不受限制地使用、复制、修改软件；
+2. 制作、使用、销售、要约销售、进口及分发软件的原始版本、修改版本（“补丁”）及衍生作品（“衍生品”）；
+3. 授权第三方行使上述权利。
 
-软件按“原样”提供，不提供任何明示或暗示的保证，包括但不限于适销性、特定用途适用性和非侵权性的保证。在任何情况下，作者或版权持有人均不对因软件或软件的使用或其他交易而产生或与之相关的任何索赔、损害赔偿或其他责任承担责任，无论是在合同、侵权或其他诉讼中。
+第二条 传染性义务
+当您分发补丁或衍生品时（包括但不限于下载、物理媒介传输或云服务形式），必须：
+1. 向所有接收者免费提供完整的机器可读源代码；
+2. 通过以下任一方式提供源代码：
+   (a) 随分发包附赠；
+   (b) 提供至少三年有效的下载链接；
+   (c) 书面承诺按介质成本价提供物理拷贝；
+3. 使补丁及衍生品整体在完全相同的许可条款下授权；
+4. 在所有副本中保留原始版权声明：“Copyright (c) 2025 江南_XnLr”；
+5. 在衍生品的README文件首行及用户文档中添加声明：“本作品基于[原软件名]构建，原软件由江南_XnLr开发（联系邮箱：1706491377@qq.com）。许可证见：[链接]”。
 
+第三条 关键定义
+1. 衍生品指：
+   (a) 包含原软件代码超过5%的作品；
+   (b) 通过静态/动态链接、插件接口或API调用等功能性依赖原软件的作品；
+   (c) 排除通过标准系统调用交互的独立模块。
+2. 分发包括直接交付、SaaS服务及使第三方能访问软件功能的行为。
+
+第四条 免责声明
+1. 软件按“原样”提供，无任何明示或暗示担保，包括适销性、特定用途适用性及不侵权担保；
+2. 因履行本许可证义务（包括源代码托管、合规审查、法律程序）导致的直接或间接损失，作者及贡献者不承担任何责任；
+3. 在任何情况下，作者责任上限不超过用户就该软件支付的金额（未付费时责任为零）。
+
+第五条 身份确认
+本文中“江南_XnLr”特指在 Gitee（gitee.com）及 GitHub（github.com）平台使用邮箱 1706491377@qq.com 注册并发布软件的用户，此邮箱为版权所有者法定联系地址。
+
+第六条 终止条款
+违反本许可任何条款将自动终止授权。恢复权利需满足：
+1. 首次违规后30天内彻底纠正；
+2. 收到版权方侵权通知后永久遵守本许可。
+
+第七条 附则
+1. 本许可受中华人民共和国法律管辖（不含冲突法原则）；
+2. 仅版权所有者江南_XnLr有权发布修订版本；
+3. 本许可文本必须包含在所有软件副本及衍生品的显著位置。
+
+生效声明
+通过使用、修改或分发本软件，您即表示接受本许可的全部条款。若不同意这些条款，您无权使用本软件的任何部分。
 
 English:
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Article 1 Grant of License
+Permission is hereby granted, free of charge, to any person or entity obtaining a copy of this software and associated documentation files ("Software"), to deal in the Software without restriction, including without limitation the rights:
+1. To use, copy, and modify the Software;
+2. To make, use, sell, offer for sale, import, and distribute the Software's original version, modified versions ("Patches"), and derivative works ("Derivatives");
+3. To grant third parties the rights described above.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Article 2 Copyleft Obligations
+When you distribute a Patch or Derivative (including but not limited to via download, physical media, or cloud service), you MUST:
+1. Make the complete machine-readable source code freely available to all recipients;
+2. Provide the source code by any of the following methods:
+   (a) Accompanying the distribution;
+   (b) Providing a valid download link accessible for at least three (3) years;
+   (c) Providing a written offer to furnish a physical copy at no more than the cost of the medium;
+3. License the entire Patch or Derivative under this identical license;
+4. Preserve the original copyright notice on all copies: "Copyright (c) 2025 Jiangnan_XnLr";
+5. Add the following declaration to the first line of the README file and user documentation of Derivatives: "This work is based on [Original Software Name] developed by Jiangnan_XnLr (Contact: 1706491377@qq.com). License: [Link]".
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Article 3 Key Definitions
+1. "Derivative" means:
+   (a) A work containing more than 5% of the original Software's code;
+   (b) A work functionally dependent on the original Software through static/dynamic linking, plugin interfaces, API calls, or similar mechanisms;
+   (c) Excluding independent modules interacting solely via standard system calls.
+2. "Distribution" includes direct delivery, SaaS services, and any act enabling third parties to access the Software's functionality.
+
+Article 4 Disclaimer
+1. The Software is provided "AS IS", WITHOUT WARRANTIES OF ANY KIND, express or implied, including MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, and NON-INFRINGEMENT;
+2. The author and contributors shall NOT be liable for any direct or indirect damages arising from fulfilling obligations under this license (including source code hosting, compliance review, or legal proceedings);
+3. IN NO EVENT shall the author's liability exceed the amount paid by you for the Software (with liability being ZERO if no payment was made).
+
+Article 5 Identity Confirmation
+"Jiangnan_XnLr" herein specifically refers to the user registered with the email 1706491377@qq.com who published the Software on Gitee (gitee.com) and GitHub (github.com). This email is the copyright holder's legally designated contact address.
+
+Article 6 Termination
+Violation of any term of this license automatically terminates your rights. To reinstate rights, you must:
+1. Cure the violation completely within thirty (30) days of the first occurrence;
+2. Permanently comply with this license after receiving notice of infringement from the copyright holder.
+
+Article 7 Supplementary Provisions
+1. This license is governed by the laws of the People's Republic of China (excluding conflict of law principles);
+2. ONLY the copyright holder Jiangnan_XnLr has the right to publish revised versions;
+3. The full text of this license MUST be included in a prominent location within all copies of the Software and Derivatives.
+
+Effective Statement
+By using, modifying, or distributing this Software, you indicate acceptance of all terms herein. If you do not agree to these terms, you have NO RIGHT to use any part of this Software.
+
+
+许可证全文终
+版权所有者：江南_XnLr（1706491377@qq.com）
+生效日期：您首次使用、修改或分发本软件之日。
+END OF LICENSE
+Copyright Holder: Jiangnan_XnLr (1706491377@qq.com)
+Effective Date: The date you first use, modify, or distribute the Software.
