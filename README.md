@@ -45,7 +45,7 @@
 
 **<u>新版本正在开发中，本仓库暂时无法使用，请到<a href=https://github.com/jiangnan-qwq/acbackup>备份仓库</a>使用。</u>**
 
-<mark>Copyright © 2024~2025 <a href=https://github.com/jiangnan-qwq>江南_XnLr</a>. All rights reserved.   
+<mark>Copyright © 2024~2026 <a href=https://github.com/jiangnan-qwq>江南_XnLr</a>. All rights reserved.   
 本项目根据[[江南_XnLr 强传染性开源许可证](https://github.com/jiangnan-qwq/aethercraft/LICENSE "江南_XnLr强传染性开源许可证1.0版是由江南_XnLr（邮箱1706491377@qq.com）创建的强传染性开源协议，允许免费使用、修改和分发软件及其衍生作品，但要求任何分发补丁或衍生品时必须公开完整源代码、永久保留原始版权声明、在显著位置标明原始软件来源，并使衍生作品整体遵循完全相同的许可条款；其传染性覆盖包含超5%原代码或存在功能依赖的作品，且明确排除云服务（SaaS）的例外；许可不含任何担保，责任上限为用户支付金额，违约将自动终止授权，受中国法律管辖且仅版权方可修订条款。")]开源发布。</mark>
 
 >**江南_XnLr 强传染性开源许可证 1.0 核心要点**  
