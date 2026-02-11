@@ -1,6 +1,6 @@
 # AetherCraft
-## 官网 https://aether-craft.rf.gd/
-![AetherCraft](https://aether-craft.rf.gd/aethercraft.png "AetherCraft")   
+## 官网 https://aether-craft.jnxnlr.top/
+![AetherCraft](https://aether-craft.jnxnlr.top/aethercraft.png "AetherCraft")   
 
 ~~因为要上学所以缓慢开发（~~
 
