@@ -1,8 +1,0 @@
-版本：v4.03
-beta测试版本
-测试内容：Python重写脚本
-许可证信息：见xnlr目录下LICENSE文件
-文档：https://aether-craft.rf.gd/download.html（新版本开发中暂不匹配此版本）
-Github:https://github.com/jiangnan-qwq/aethercraft/
-Gitee:https://gitee.com/jiangnan-qwq/aethercraft/
-By:江南_XnLr
