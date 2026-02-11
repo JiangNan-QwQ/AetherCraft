@@ -5,9 +5,9 @@
 ~~因为要上学所以缓慢开发（~~
 
 ### 如何使用?   
-- 你可以在<a href=https://github.com/jiangnan-qwq/aethercraft>Github</a>或<a href=https://gitee.com/jiangnan-qwq/aethercraft>Gitee</a>找到本项目并克隆到 **/xnlr** 目录下并用`python xnlr/xnlr.py`启动脚本，还有一些依赖需要安装，脚本开发完毕后会在官网更新详细教程。
+- 你可以在<a href=https://github.com/jiangnan-qwq/aethercraft>Github</a>或<a href=https://gitee.com/jiangnan-qwq/aethercraft>Gitee</a>找到本项目并克隆到 **/xnlr** 目录下(`git clone https://github.com/jiangnan_qwq/aethercraft/ $HOME/xnlr`  示例，请自行替换网址)并用`bash xnlr/main.sh`启动脚本，还有一些依赖需要安装，脚本开发完毕后会在官网更新详细教程。
 
-### 功能    
+### 功能以及TODO    
 - 核心下载：   
 - [x] Spigot核心下载   
 - [ ] Paper,Forge等核心下载   
@@ -41,7 +41,7 @@
 
 ***
 
-**注意：目前脚本在手机Termux进行开发和测试，暂未测试Linux及其适配。**
+**注意：脚本目前仅适用于Termux/Zerotermux,未来可能会支持Linux电脑端**
 
 **<u>新版本正在开发中，本仓库暂时无法使用，请到<a href=https://github.com/jiangnan-qwq/acbackup>备份仓库</a>使用。</u>**
 
