@@ -10,7 +10,7 @@
 ### 功能以及TODO    
 - 核心下载：   
 - [x] Spigot核心下载   
-- [ ] Paper,Forge等核心下载   
+- [ ] Fabric等核心下载   
 
 
 - 启动服务器：   
