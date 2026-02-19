@@ -12,7 +12,7 @@ for dir in ${DIRS}; do
     :
   else
     echo -e "${YELLOW}目录 ${dir} 不存在，创建。。。"
-    mkdir "$HOME/${dir}"
+    mkdir -p "$HOME/${dir}"
   fi
 done
 
